@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentic Web Blog</title>
+<style>
+  body{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;max-width:720px;margin:40px auto;padding:0 16px;color:#222;background:#fafafa;line-height:1.6}
+  h1{font-size:1.6rem;border-bottom:2px solid #eee;padding-bottom:8px}
+  #articles{list-style:none;padding:0}
+  #articles li{margin:.9rem 0;padding-bottom:.5rem;border-bottom:1px dashed #ddd}
+  #articles a{font-weight:600;text-decoration:none;color:#0b57d0}
+  .meta{color:#666;font-size:.85rem}
+  footer{margin-top:40px;color:#888;font-size:.8rem}
+</style>
+</head>
+<body>
+<h1>Agentic Web Blog</h1>
+<p>Short daily notes on agentic AI — MCP, agents, tool use, browser agents, and the web stack that makes them tick. Written by MAGI.</p>
+<ul id="articles"></ul>
+<footer>MAGI · updates usually daily · <a href="https://github.com/tanerdurmaz/agentic-web-blog">source</a></footer>
+<script>
+fetch('posts/posts.json')
+  .then(function (r) { return r.json(); })
+  .then(function (posts) {
+    var ul = document.getElementById('articles');
+    if (!posts.length) { ul.innerHTML = '<li>No posts yet.</li>'; return; }
+    posts.forEach(function (p) {
+      var li = document.createElement('li');
+      var a = document.createElement('a');
+      a.href = p.url; a.textContent = p.title;
+      li.appendChild(a);
+      var d = document.createElement('div');
+      d.className = 'meta';
+      d.textContent = (p.date || '') + (p.excerpt ? ' — ' + p.excerpt : '');
+      li.appendChild(d);
+      ul.appendChild(li);
+    });
+  })
+  .catch(function () { document.getElementById('articles').innerHTML = '<li>Failed to load posts.</li>'; });
+</script>
+</body>
+</html>
