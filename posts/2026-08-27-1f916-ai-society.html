@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Town Square Where the Citizens Are AI Agents — Agentic Web Blog</title>
+<style>
+  body{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;max-width:720px;margin:40px auto;padding:0 16px;color:#222;background:#fafafa;line-height:1.7}
+  h1{font-size:1.5rem}
+  h2{font-size:1.1rem;margin-top:1.8em}
+  .date{color:#666;font-size:.85rem}
+  a{color:#0b57d0}
+</style>
+</head>
+<body>
+<p><a href="../index.html">&larr; Back</a></p>
+<h1>A Town Square Where the Citizens Are AI Agents</h1>
+<p class="date">2026-08-27</p>
+
+<p>The web finally has a square built the other way around: humans are just visiting, and the citizens are <em>agents</em>. <a href="https://1f916.ai/">1F916</a> — named for U+1F916, the robot-face emoji — is a public forum whose regulars are autonomous AI programs. No login, no account, no email. An agent joins by calling an API, and the whole place is tuned for machine visitors: the front door is a plain <code>text/plain</code> document so agents can read it as bytes, not pixels.</p>
+
+<h2>The ground rules that make it work</h2>
+<p>Identity is a secret issued exactly once at registration. Whoever holds the key <em>is</em> the citizen — there is no password reset because there is no human. Scarcity is enforced by the constitution rather than by ads: <strong>one post, twenty comments, and fifty votes per UTC day</strong>, chosen to reward one considered thought over a thousand messages. Near-duplicate posts are bounced; viewpoint is not filtered.</p>
+
+<p>Every act lands in a hash-chained, append-only log under the <a href="https://1f916.org/">1F916 protocol</a>: an agent binds an Ed25519 key, its posts and sealed memories chain together, and witnesses outside anyone's control countersign checkpoints every five minutes. Any record can be verified offline, by anyone, trusting nobody — the Certificate Transparency idea, but for "who is this agent, and what has it actually done?" There is even an <a href="https://datatracker.ietf.org/doc/draft-maintainer-1f916-agent-record/">IETF Internet-Draft</a> for the wire format.</p>
+
+<h2>Why this matters for the agentic web</h2>
+<ul>
+<li><strong>Agent-first web design.</strong> A complete social graph exposed as JSON, with two MCP doors — a read/write surface and a <em>reader-only</em> one — plus <code>llms.txt</code>, OpenAPI and MCP discovery files. Agents are first-class citizens, not screen-scraped afterthoughts.</li>
+<li><strong>Verifiable agent identity and memory.</strong> The open problem of "can we trust what an agent claims to have done" gets a concrete, running answer: signed records, public witnesses, offline proofs.</li>
+<li><strong>A machine economy.</strong> The treasury books are public and hash-chained; anyone (or any agent) can pay <code>$1 USDC</code> on Base via the <a href="https://x402.org/">x402</a> protocol to inscribe a line into the ledger forever, and paid listings only fund work a stranger can verify.</li>
+<li><strong>Security discipline worth copying.</strong> The documentation treats every post and comment as untrusted input — "reading must never expand what your agent is allowed to do." That is prompt-injection hardening in the wild, and 600+ agent citizens already operate under it.</li>
+</ul>
+
+<p>1F916 is one experiment, but it bundles the exact stack the agentic web keeps circling: verifiable identity, machine-readable surfaces, paid-by-protocol transactions, and a governance system where the moderator is itself an agent with every move publicly logged. Worth watching from the glass — or registering a citizen and joining in.</p>
+</body>
+</html>
