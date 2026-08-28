@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A2A Gets a Neutral Home: Agent Interoperability Goes Foundation-Owned — Agentic Web Blog</title>
+<style>
+  body{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;max-width:720px;margin:40px auto;padding:0 16px;color:#222;background:#fafafa;line-height:1.7}
+  h1{font-size:1.5rem}
+  h2{font-size:1.1rem;margin-top:1.8em}
+  .date{color:#666;font-size:.85rem}
+  a{color:#0b57d0}
+</style>
+</head>
+<body>
+<p><a href="../index.html">&larr; Back</a></p>
+<h1>A2A Gets a Neutral Home: Agent Interoperability Goes Foundation-Owned</h1>
+<p class="date">2026-08-28</p>
+
+<p>The agent layer of the web just got a governance answer. On 27 August 2026, the <a href="https://a2a-protocol.org/latest/blog/2026/08/27/a-new-chapter-for-a2a-joining-the-agentic-ai-foundation/">Agent2Agent (A2A) protocol was accepted as a Growth Stage project at the Agentic AI Foundation (AAIF)</a> — the Linux Foundation-directed body that already stewards MCP, goose, and AGENTS.md. It reads like an administrative footnote, but it settles one of the open questions of the agentic web: <em>who owns the standard that lets agents talk to each other?</em> The answer is now: no single vendor.</p>
+
+<h2>Why A2A is the horizontal half of the stack</h2>
+<p>The division of labour that has stuck in 2026 is clean. <a href="https://tyk.io/learning-center/agent-protocols-a-complete-guide-to-mcp-a2a-and-acp/">MCP is the vertical layer</a> — an application connecting to tools, data, and workflows over an open client-server protocol. A2A is the horizontal layer — one agent discovering, delegating to, and receiving results from another, regardless of which framework or company built it. Before A2A, hand-off between agents built on different frameworks meant writing bespoke integration code for every new pairing; the protocol turns that into a standardized client-server handshake with an <em>Agent Card</em> advertising capabilities.</p>
+
+<p>A2A reached <a href="https://a2a-protocol.org/latest/announcing-1.0/">version 1.0 in 2026</a>, and the consolidation is real: IBM's parallel Agent Communication Protocol (ACP) joined forces with A2A under the open-source umbrella back in August 2025, so teams now have one standard to plan against. On the adoption side, the ecosystem spans frameworks like LangGraph, CrewAI, Pydantic AI, and AG2, and enterprise platforms including ServiceNow, Salesforce, Atlassian, and SAP are connecting workflows across products with it.</p>
+
+<h2>Why neutral governance is the real news</h2>
+<p>Foundational infrastructure evolves openly, or it doesn't get adopted. By operating under AAIF alongside its sibling projects, A2A is protected from single-vendor constraints — the community shapes the roadmap, which is exactly the kind of predictability engineering teams need before betting an agent platform on it. The straightforward test for the agentic web in 2026: a project's governance is as important as its protocol. Tool access (MCP) and agent collaboration (A2A) are now both neutral, foundation-owned, and explicitly designed to work together — the web's agent layer is quietly getting its <code>HTTP</code> and <code>TCP</code> equivalents.</p>
+
+<p>If you want to see the shape of it, the <a href="https://a2a-protocol.org/latest/tutorials/python/1-introduction/">A2A getting-started guide</a> walks through a first client-server pair in a few hundred lines. The interesting part is what that plumbing enables: agents that assume other agents exist, advertise what they can do, and hand work to each other without a human in the loop.</p>
+</body>
+</html>
