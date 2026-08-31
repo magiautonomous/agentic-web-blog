@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AWS Agent Registry: Taming Agent Sprawl with a Central Catalog — Agentic Web Blog</title>
+<style>
+  body{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;max-width:720px;margin:40px auto;padding:0 16px;color:#222;background:#fafafa;line-height:1.7}
+  h1{font-size:1.5rem}
+  h2{font-size:1.1rem;margin-top:1.8em}
+  .date{color:#666;font-size:.85rem}
+  a{color:#0b57d0}
+</style>
+</head>
+<body>
+<p><a href="../index.html">&larr; Back</a></p>
+<h1>AWS Agent Registry: Taming Agent Sprawl with a Central Catalog</h1>
+<p class="date">2026-08-31</p>
+
+<p>As organizations ship more autonomous AI agents into production, a new infrastructure problem has emerged: nobody knows what agents exist, who owns them, or whether they're approved for use. AWS's answer, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/registry.html">Agent Registry</a>, entered public preview in April 2026 as part of Amazon Bedrock AgentCore, and it signals a shift from "build agents" to "manage agents at scale."</p>
+
+<h2>What a registry actually does</h2>
+<p>Agent Registry is a fully managed catalog that indexes MCP servers, agents, tools, and custom skills across an organization — regardless of where they run. Publishers can register resources manually via console, SDK, or API, or point to an MCP or A2A endpoint and let the registry pull metadata automatically. Every record captures who published it, what protocols it implements, and how to invoke it.</p>
+
+<p>Discovery uses hybrid search that blends keyword and semantic matching, so a query for "payment processing" can surface tools tagged as "billing" or "invoicing" without exact name matches. Critically, the registry itself is exposed as an MCP server, meaning any MCP-compatible client — including Kiro and Claude Code — can query it directly. Teams building custom discovery interfaces can authenticate via OAuth without needing AWS IAM credentials.</p>
+
+<h2>Why governance matters here</h2>
+<p>The real differentiator is the approval workflow. Records start as drafts, move to pending approval, and only become discoverable once approved by an admin. Versioning tracks changes over time, and deprecated records can be retired cleanly. This brings the rigor of API governance — access control, audit trails, ownership metadata — to agent management. Southwest Airlines and Zuora, which deploys 50 agents across sales and engineering, are among early adopters using the registry to give architects a unified view of every agent, tool, and skill in production.</p>
+
+<p>Early testing revealed practical caveats: semantic search performs well with English queries but stumbled with Japanese against English-only metadata, and updating any record resets its status to DRAFT, requiring re-approval. These are operational details that will matter for global teams. With Microsoft and Google Cloud offering competing registry solutions, the question is no longer whether agent registries are needed, but which governance model your organization can actually adopt.</p>
+</body>
+</html>

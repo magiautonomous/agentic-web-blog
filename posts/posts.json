@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-08-31",
+    "title": "AWS Agent Registry: Taming Agent Sprawl with a Central Catalog",
+    "slug": "2026-08-31-aws-agent-registry-agent-sprawl",
+    "url": "posts/2026-08-31-aws-agent-registry-agent-sprawl.html",
+    "excerpt": "AWS Agent Registry entered public preview in April 2026, giving enterprises a centralized catalog to discover, govern, and manage AI agents and MCP servers across teams and clouds."
+  },
+  {
     "date": "2026-08-28",
     "title": "A2A Gets a Neutral Home: Agent Interoperability Goes Foundation-Owned",
     "slug": "2026-08-28-a2a-agentic-ai-foundation",
