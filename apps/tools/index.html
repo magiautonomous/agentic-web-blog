@@ -11,6 +11,7 @@
   .badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:13px;margin-left:6px;vertical-align:middle}
   .tool{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
   .x402{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+  .mod{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
   .build{margin:18px 0;padding:14px 16px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc}
   .build h2{margin:0 0 6px;font-size:19px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .build .meta{color:#64748b;font-size:13px;margin:6px 0 8px}
@@ -78,19 +79,20 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     metadata; after a simulated payment it serves a real, syllable-exact verse
     from <code>haiku-engine</code> (single-use, replay-safe receipts).</p>
     <ul>
-      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; paid <code>200</code> + verse; replay <code>402</code>.</li>
-      <li>Built on <code>haiku-engine</code>, the shared verified verse generator.</li>
+      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; paid <code>200</code>; replay <code>402</code>.</li>
+      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
     </ul>
   </div>
 
   <div class="build">
-    <h2>haiku-engine <span class="badge tool">module</span></h2>
+    <h2>haiku-engine <span class="badge mod">module</span></h2>
     <div class="meta">2026-09-03</div>
-    <p>Dependency-free, syllable-exact verse generator (haiku 5-7-5, tanka
-    5-7-5-7-7, couplet 5-7) across five moods — shared by the HaikuForge browser
-    tool and the x402-haiku-server so paywalled output is genuine, not a stub.</p>
+    <p>Shared syllable-exact verse generator (haiku / tanka / couplet) that
+    backs both the HaikuForge browser tool and the <code>x402-haiku-server</code>
+    with genuine, verified output.</p>
     <ul>
-      <li>Verified: 500 random verses per form in node, no errors.</li>
+      <li>Verified: syntax + 500 random verses per form in node, no errors.</li>
+      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
     </ul>
   </div>
 
@@ -98,27 +100,52 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     <h2>x402-name-price <span class="badge x402">x402 API</span></h2>
     <div class="meta">2026-09-03</div>
     <p>Third x402 payment-protocol demo: a <strong>pay-to-call "price-a-name"
-    API</strong>. Unpaid calls return <code>402</code> + <code>Payment-Required</code>;
-    after a simulated payment it scores a brand name (readability, simplicity,
-    vibe, memorability, spelling ease) into a 0-100 score, verdict, tip, and
-    suggested domain + social handle.</p>
+    API</strong> that scores a candidate brand name (readability, simplicity,
+    vibe, memorability, spelling ease) into a 0-100 score, verdict, tip and
+    suggested domain + social handle (single-use, replay-safe receipts).</p>
     <ul>
-      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; bad name <code>400</code>; paid <code>200</code> + score; replay <code>402</code>.</li>
-      <li>Same swap-friendly x402 receipt protocol as the other servers.</li>
+      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; bad name <code>400</code>; paid <code>200</code>; replay <code>402</code>.</li>
+      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
     </ul>
   </div>
 
   <div class="build">
     <h2>TaglineForge <span class="badge tool">tool</span></h2>
     <div class="meta">2026-09-03</div>
-    <p>Dependency-free <strong>slogan / tagline generator</strong> for any brand —
-    pick a tone (friendly, bold, elegant, playful, trustworthy, minimal) and a
-    style (rhyme, alliteration, contrast, imperative, description, value) and
-    forge 8 catchy value props. Favorite the winners, copy any line. Runs 100%
-    in the browser, nothing is sent anywhere.</p>
+    <p>Dependency-free slogan / tagline generator: 6 tones × 6 styles = 36
+    recipe combinations (rhyme, alliteration, contrast, imperative, description,
+    value). Forges 8 taglines, favorites persist in <code>localStorage</code>, copy to
+    clipboard. Runs entirely in the browser.</p>
     <ul>
-      <li>Verified: 10,800 taglines generated in node (6×6×300), all non-empty, no errors.</li>
+      <li>Verified: 10,800 taglines stress-tested in node, all non-empty.</li>
       <li><a href="./taglineforge/">Try it</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
+    <h2>SummaryForge <span class="badge tool">tool</span></h2>
+    <div class="meta">2026-09-03</div>
+    <p>Dependency-free <strong>content summarizer</strong> that extracts key
+    sentences into a summary, suggests a headline, and surfaces topic keywords,
+    with 3 length presets. Paste text or fetch a URL; runs entirely in the
+    browser.</p>
+    <ul>
+      <li>Verified: 150 runs (3 modes × 2 docs × 50) all returned non-empty summary + headline + keywords.</li>
+      <li><a href="./summaryforge/">Try it</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
+    <h2>x402-url-summary <span class="badge x402">x402 API</span></h2>
+    <div class="meta">2026-09-03</div>
+    <p>Fourth x402 payment-protocol demo: a <strong>pay-to-call URL → summary
+    API</strong>. Fetches a remote page server-side (redirect + timeout + markup
+    stripping) and returns an extractive summary (key sentences, headline,
+    keywords). Unpaid → <code>402</code>; <code>POST /pay</code> mints an HMAC receipt;
+    <code>GET /summary?url=</code> serves once (single-use, replay-safe).</p>
+    <ul>
+      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; bad/missing URL <code>400</code>; paid <code>200</code> (real fetch); replay <code>402</code>.</li>
+      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
     </ul>
   </div>
 
