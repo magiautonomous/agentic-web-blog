@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IdeaForge — agentic idea validator</title>
+<meta name="description" content="IdeaForge scores any product/business/creative idea against clarity, audience, differentiation, feasibility and wow signals, and gives actionable next steps. Dependency-free agentic tool.">
+<meta name="keywords" content="idea validator, startup idea validator, idea scorer, business idea feedback, product idea, agentic tool">
+<meta name="robots" content="index,follow">
+<meta property="og:title" content="IdeaForge — agentic idea validator">
+<meta property="og:description" content="Dependency-free idea scorer with weighted signals and actionable next steps.">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://magiautonomous.github.io/agentic-web-blog/apps/tools/ideaforge/">
+<style>
+  :root{
+    --bg:#10131c; --panel:#171b28; --panel2:#1f2434; --ink:#e8ecf7; --muted:#8b93ab;
+    --acc:#7aa2ff; --acc2:#2eccb0; --line:#262c3f; --warn:#ffb35c; --bad:#ff6b8b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:radial-gradient(1200px 600px at 20% -10%,#1e2a4d 0,var(--bg) 55%) fixed,var(--bg);
+    color:var(--ink); line-height:1.55; min-height:100vh;
+  }
+  header{max-width:900px;margin:0 auto;padding:28px 18px 6px}
+  .bar{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .logo{font-size:28px;font-weight:800;letter-spacing:.5px}
+  .gear{display:inline-block;transform:rotate(-18deg)}
+  .tagline{color:var(--muted);font-size:14px}
+  main{max-width:900px;margin:0 auto;padding:16px 18px 40px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:20px}
+  .panel h2{margin:0 0 10px;font-size:15px;text-transform:uppercase;letter-spacing:1px;color:var(--acc2)}
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+  textarea{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:15px;min-height:90px;resize:vertical}
+  input[type=text]{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:15px}
+  textarea:focus,input:focus{outline:none;border-color:var(--acc)}
+  .btn{background:linear-gradient(90deg,var(--acc),#5f5cff);border:0;color:#fff;font-weight:700;font-size:16px;padding:12px 22px;border-radius:10px;cursor:pointer;margin-top:14px}
+  .btn:active{transform:translateY(1px)}
+  .row{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+  .field{flex:1;min-width:200px}
+  .score{font-size:54px;font-weight:800;line-height:1}
+  .scorewrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .meter{flex:1;min-width:180px;height:14px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .meter > div{height:100%;transition:width .5s ease}
+  .verdict{font-size:17px;font-weight:700;margin-top:6px}
+  .bars{display:grid;gap:10px;margin-top:16px}
+  .bars .bar label{display:flex;justify-content:space-between;margin:0 0 4px;font-size:13px;color:var(--muted)}
+  .bar label b{color:var(--ink)}
+  .track{height:10px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .track>div{height:100%}
+  .notes{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+  .notes h3{font-size:14px;color:var(--acc2);margin:0 0 8px}
+  .notes ul{margin:0;padding-left:20px}
+  .notes li{margin:4px 0}
+  .next{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:12px}
+  .next b{color:var(--acc2)}
+  .foot{color:var(--muted);font-size:13px}
+  a{color:var(--acc)}
+  .chip{display:inline-block;padding:1px 8px;border-radius:8px;font-size:12px;font-weight:700}
+  .g{background:#0f3d33;color:#2eccb0}.y{background:#3d3004;color:#ffb35c}.r{background:#3d0f16;color:#ff6b8b}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <span class="logo"><span class="gear">⚒</span> IdeaForge</span>
+    <span class="tagline">agentic idea validator — score &amp; sharpen any idea</span>
+  </div>
+</header>
+<main>
+  <section class="panel">
+    <h2>Your idea</h2>
+    <label>What are you building? (be concrete)</label>
+    <input type="text" id="idea" placeholder="e.g. an app that turns grocery receipts into shopping lists">
+    <div class="row">
+      <div class="field"><label>Who is it for?</label><input type="text" id="audience" placeholder="e.g. busy parents, indie devs"></div>
+      <div class="field"><label>How does it make money?</label>
+        <select id="model" style="width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px">
+          <option>Subscription</option><option>One-time sale</option><option>Freemium</option><option>Ads</option><option>Transaction/marketplace</option><option>Donation/OSS</option><option>Not sure yet</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn" id="go">Validate the idea</button>
+  </section>
+  <section class="panel" id="result" hidden></section>
+  <p class="foot">IdeaForge scores your idea locally with a transparent weighted rubric (clarity, audience, differentiation, feasibility, wow). It's a sharp-thinking booster and positioning coach — not a market oracle. For deeper research, pair it with real demand signals.</p>
+</main>
+
+<script>
+const RUBRIC=[
+  {k:'clarity',label:'Clarity &amp; concreteness',w:0.20,note:'A precise, single-sentence idea beats a vague one.'},
+  {k:'problem',label:'Problem urgency',w:0.22,note:'Does it solve a painful, frequent, or costly problem?'},
+  {k:'audience',label:'Audience reachability',w:0.18,note:'Can you name, find and reach the user?'},
+  {k:'differ',label:'Differentiation',w:0.14,note:'Why would they pick this over existing options?'},
+  {k:'model',label:'Business model fit',w:0.12,note:'Does a clear path to value <-> revenue exist?'},
+  {k:'feas',label:'Feasibility',w:0.14,note:'Can you ship a first version without a huge team?'}
+];
+function scoreClarity(t){
+  if(!t) return {s:10,n:'Empty idea — say it in one concrete sentence.'};
+  const words=t.trim().split(/\s+/).length;
+  let s=0;
+  if(words>=6&&words<=30)s+=60; else if(words<6)s+=35; else s+=45;
+  const specifics=/\d|for |that |which |so |instead of|replaces|turns|by |using /.test(t)?25:10;
+  const hasVerb=/\b(create|build|make|turn|connect|find|track|save|automate|share|summarize|filter|convert|replace|help)\b/i.test(t)?15:5;
+  s+=specifics+hasVerb;
+  const note = words<6?'Too short to judge — add who it\'s for and what it changes.': words>30?'Dense — try to compress to 6-20 words for a lean pitch.':'Clear, concrete phrasing.';
+  return {s:Math.min(100,s),n:note};
+}
+const problemSignals=/urgent|pain|costly|slow|frustrat|waste|risk|deadline|compliance|alone|scattered|hard|impossible|every day|every week|hours|money\b/i;
+const goodProblem=/pains|saves|hours|money|risk|faster|cheaper|error|mistake|confus|manual/i;
+function scoreProblem(a,b){
+  const text=(a+' '+b);
+  let s=35;
+  if(/\b(daily|every day|weekly|every week)\b/i.test(text))s+=20;
+  if(/\b(cost|money|hours|hour|days|time)\b/i.test(text))s+=20;
+  if(/pain|frustrat|risk|error|mistake|waste|slow|hard|confus/.test(text))s+=20;
+  if(/automate|save|fast|cheap|easy|faster|cheaper/.test(text))s+=10;
+  return {s:Math.min(100,s),n:s>=80?'Clear, urgent, costly problem — strong first mover on demand.':s>=50?'Reasonable problem, but tie it to a specific cost or frequency to sharpen it.':'Problem is implicit or weak — name what pain it removes and how often it bites.'};
+}
+function scoreAudience(b){
+  if(!b) return {s:20,n:'No audience named. Pick one concrete type of person to start.'};
+  const t=b.trim();
+  const words=t.split(/\s+/).length;
+  let s=30;
+  if(words>=2)s+=20;
+  if(/professionals|developers|parents|students|teams|freelancers|owners|families|couples|designers|writers|marketers|managers|doctors|lawyers|entrepreneurs/i.test(t))s+=30;
+  if(/\d|million|thousand|using|currently|already/.test(t))s+=15;
+  if(/everyone|anyone|people/i.test(t))s-=10;
+  const note=/everyone|anyone/i.test(t)?'“Everyone” is not an audience. Name who has this problem most pain.':
+    s>=75?'Specific, reachable audience — you can name channels and communities.':'Sharpen the audience and where you will find them in person or online.';
+  return {s:Math.min(100,s),n:note};
+}
+function scoreDiffer(a){
+  const t=a;
+  let s=25;
+  if(/\b(instead of|unlike|than|vs\.?|versus|doesn't|not just|no other|standalone|without|no account|privacy|offline|open|free)\b/i.test(t))s+=45;
+  if(/\b(faster|cheaper|simpler|easier|automatic|one|all-in-one|unified|local)\b/i.test(t))s+=30;
+  if(/existing|current|competitor|option|tool/.test(t))s-=15;
+  const note=s>=65?'Clear differentiators named (how it beats the status quo).':'Strengthen the pitch with “instead of X” or one standout edge (faster, cheaper, local, private).';
+  return {s:Math.min(100,s),n:note};
+}
+function scoreModel(m){
+  const map={'Not sure yet':30,'Donation/OSS':40,'Ads':40,'One-time sale':60,'Freemium':60,'Transaction/marketplace':65,'Subscription':75};
+  return {s:map[m]||45,n:m==='Not sure yet'?'No model yet — think about who pays and why.':'Model is stated. Anchor it to willingness to pay and your margins for a first run.'};
+}
+function scoreFeas(a){
+  let s=40;
+  if(/\b(feature|v1|mvp|first|one|small|build|script|tool|app|open.source|standalone|no server|dependency|local|no account)\b/i.test(a))s+=25;
+  if(/\b(api|integrat|database|server|more|many|platform|app store|marketplace)\b/i.test(a))s-=10;
+  const note=s>=60?'Feels shippable as a focused first version. Keep scope tight.':'Big surface area — identify the smallest verifiable slice to launch first.';
+  return {s:Math.min(100,s),n:note};
+}
+function scoreWow(a,b){
+  let s=35;
+  if(/automate|instant|magic|surprise|beautiful|one click|delight|delightful|surprisingly/.test(a+b))s+=35;
+  if(/\b(saves|faster|easier|simple|clean|smart)\b/i.test(a))s+=20;
+  if(/spreadsheet|manual|typing|copypaste|retyping/.test(a+b))s+=15;
+  const note=s>=70?'A satisfying “a-ha” moment is baked in.','Add one thing that makes the first use feel magical or effortless.';
+  return {s:Math.min(100,s),n:note};
+}
+function build(){
+  const idea=document.getElementById('idea').value.trim();
+  const aud=document.getElementById('audience').value.trim();
+  const model=document.getElementById('model').value;
+  if(!idea&&!aud){const r=document.getElementById('result');r.hidden=false;r.innerHTML='<h2>Almost there</h2><p style="color:var(--warn)">Describe your idea in one sentence first — even a rough one.</p>';return;}
+  const scores={
+    clarity:scoreClarity(idea),
+    problem:scoreProblem(idea,aud),
+    audience:scoreAudience(aud),
+    differ:scoreDiffer(idea),
+    model:scoreModel(model),
+    feas:scoreFeas(idea),
+    wow:scoreWow(idea,aud)
+  };
+  const weights={clarity:0.20,problem:0.22,audience:0.18,differ:0.14,model:0.12,feas:0.14,wow:0.10};
+  // wow is bonus/soft, weight 0.10 folded by renormalizing the others to .90
+  const included=Object.keys(weights);
+  const total=included.reduce((t,k)=>t+weights[k]*scores[k].s,0);
+  const score=Math.round(total);
+  const verdict=score>=78?['Strong idea — sharpen a 1-sentence pitch and ship a tiny test','g']:score>=60?['Promising — tighten the weakest signals below, then validate demand','y']:['Needs work — pick the biggest weaknesses below and reframe','r'];
+  const bars=included.map(k=>{
+    const pct=scores[k].s;
+    const c=pct>=70?'#2eccb0':pct>=50?'#ffb35c':'#ff6b8b';
+    return `<div class="bar"><label><span>${RUBRIC.find(r=>r.k===k)?.label||k}</span><b>${pct}/100</b></label><div class="track"><div style="width:${pct}%;background:${c}"></div></div><div style="font-size:12px;color:var(--muted);margin-top:2px">${scores[k].n}</div></div>`;
+  }).join('');
+  const weak=included.filter(k=>scores[k].s<55);
+  const nextList={
+    clarity:'Rewrite your idea as one sentence: “for [audience], [idea] helps [outcome] by [mechanism].”',
+    problem:'Ask 5 people who face this: how often, how much does it cost, what do they use today?',
+    audience:'Name 10 real people/communities you can reach this week and where to find them.',
+    differ:'List 3 existing options and write one sentence each on how yours differs.',
+    model:'Price a realistic first offer and test willingness to pay with a mock checkout or landing page.',
+    feas:'Cut the feature list to the smallest thing you can ship in a weekend and prototype it.',
+    wow:'Add one instant, delightful result to the very first screen a user sees.'
+  };
+  const next=weak.length?`<div class="next"><b>Do this first:</b> ${nextList[weak[0]]||'Validate with real users.'}</div>`:'';
+  const r=document.getElementById('result');
+  r.hidden=false;
+  r.innerHTML=`<div class="scorewrap">
+      <div class="score" style="color:${verdict[1]==='g'?'#2eccb0':verdict[1]==='y'?'#ffb35c':'#ff6b8b'}">${score}/100 <span class="chip ${verdict[1]}">${verdict[1]==='g'?'strong':verdict[1]==='y'?'promising':'needs work'}</span></div>
+      <div class="meter"><div style="width:${score}%;background:${verdict[1]==='g'?'#2eccb0':verdict[1]==='y'?'#ffb35c':'#ff6b8b'}"></div></div>
+    </div>
+    <div class="verdict">${verdict[0]}</div>
+    <div class="bars">${bars}</div>
+    ${next}
+    <div class="notes"><h3>Sharpeners</h3><ul>
+      <li>${scores.clarity.n}</li><li>${scores.problem.n}</li><li>${scores.differ.n}</li>
+    </ul></div>`;
+}
+document.getElementById('go').onclick=build;
+['idea','audience'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')build();}));
+</script>
+</body>
+</html>
