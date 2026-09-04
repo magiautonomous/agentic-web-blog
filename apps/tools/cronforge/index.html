@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CronForge — cron expression parser &amp; visualizer</title>
+<meta name="description" content="Dependency-free cron expression parser and scheduler. Type a cron string and see each field expanded, a plain-English description, and the next run times — all in the browser.">
+<style>
+  :root{--fg:#1a1a1a;--muted:#64748b;--line:#e2e8f0;--accent:#059669;--ok:#065f46;--warn:#92400e;--err:#b91c1c;--bg:#f8fafc}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:860px;margin:0 auto;padding:24px 20px 60px;color:var(--fg);line-height:1.6}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 18px;font-size:14px}
+  .cron-input{width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-size:16px;font-family:ui-monospace,Menlo,monospace}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  button{padding:9px 16px;border:1px solid var(--line);border-radius:8px;font-size:14px;cursor:pointer;font-weight:600}
+  button.primary{background:var(--accent);color:#fff;border:0}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  .chip{padding:5px 12px;border:1px solid var(--line);border-radius:16px;font-size:13px;background:#fff;cursor:pointer;font-family:ui-monospace,Menlo,monospace}
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+  .card h2{margin:0 0 10px;font-size:16px}
+  .err-msg{color:var(--err);font-size:15px;font-weight:600;margin:8px 0}
+  .human{font-size:17px;font-weight:600;margin:6px 0}
+  .fldgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:10px 0}
+  .fld{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .fld .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px}
+  .fld .vals{font-family:ui-monospace,Menlo,monospace;font-size:13px;word-break:break-all}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);font-size:14px}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  td code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+  .meta{color:var(--muted);font-size:13px;margin:6px 0}
+  .note{color:var(--muted);font-size:13px}
+  @media (max-width:640px){.fldgrid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<h1>CronForge</h1>
+<p class="sub">Dependency-free <strong>cron expression parser &amp; visualizer</strong>.
+Type any cron string (5-field, or with seconds / year, or an <code>@shorthand</code>) and
+CronForge expands every field, explains it in plain English, and lists the next run
+times. Runs entirely in the browser — nothing is sent anywhere.</p>
+
+<div class="row" style="align-items:stretch">
+  <input type="text" id="expr" class="cron-input" value="0 9 * * 1-5"
+    placeholder="e.g. 0 9 * * 1-5  →  * * * * *  →  */15 9-17 * * MON-FRI  →  @daily"
+    spellcheck="false">
+</div>
+<div class="row">
+  <button class="primary" onclick="update()">Parse</button>
+  <button onclick="currentTime()">Now</button>
+  <span class="note" id="meta"></span>
+</div>
+
+<div class="chips" id="chips"></div>
+
+<div id="out"></div>
+
+<script src="cron-engine.js"></script>
+<script>
+const PRESETS = [
+  ['@reboot','Every reboot'],
+  ['@daily','Daily at midnight'],
+  ['@hourly','Top of every hour'],
+  ['0 12 * * *','Noon daily'],
+  ['0 9,17 * * *','Twice daily'],
+  ['*/15 * * * *','Every 15 min'],
+  ['0 9 * * 1-5','Weekdays 9am'],
+  ['30 8-10 * * 1-5','Weekday mornings'],
+  ['0 0 1 1 *','Jan 1 midnight'],
+  ['0 3 * * 0','Sunday 3am'],
+  ['*/5 * * * *','Every 5 min'],
+  ['30 7 * * *','7:30 daily'],
+];
+
+let refNow = new Date();
+
+function pad(n){return String(n).padStart(2,'0')}
+
+function currentTime(){
+  refNow = new Date();
+  update();
+}
+
+function renderChips(){
+  const el = document.getElementById('chips');
+  el.innerHTML = '';
+  PRESETS.forEach(([expr,label])=>{
+    const c = document.createElement('button');
+    c.className='chip';
+    c.textContent=expr;
+    c.title=label;
+    c.onclick=()=>{ document.getElementById('expr').value=expr; update(); };
+    el.appendChild(c);
+  });
+}
+
+function fmt(iso){
+  const d = new Date(iso);
+  return d.toLocaleString();
+}
+
+function update(){
+  const expr = document.getElementById('expr').value.trim();
+  const out = document.getElementById('out');
+  try {
+    const p = CronEngine.parse(expr);
+    let html = '';
+
+    if (p.reboot) {
+      html += `<div class="card"><div class="human">At reboot</div>
+        <p class="meta">${p.human}</p></div>`;
+      out.innerHTML = html;
+      document.getElementById('meta').textContent = 'cron job runs on every system startup';
+      return;
+    }
+
+    document.getElementById('meta').textContent =
+      `${p.digest.fields} field(s) · ${p.digest.perDayCount} run(s)/day` + (p.shorthand ? ` · ${p.shorthand}` : '');
+
+    html += `<div class="card"><h2>What it means</h2><div class="human">${p.human}</div>
+      <div class="fldgrid">`;
+
+    const labels = ['second','minute','hour','day-of-month','month','day-of-week','year'];
+    labels.forEach(name=>{
+      const vals = p.list[name];
+      const display = vals == null ? '—' : vals.length > 24 ? `${vals[0]}–${vals[vals.length-1]} (${vals.length})` : vals.join(', ');
+      html += `<div class="fld"><div class="lbl">${name}</div><div class="vals">${display}</div></div>`;
+    });
+
+    html += `</div></div>`;
+
+    // next runs
+    const ref = refNow.toISOString();
+    const next = CronEngine.nextRuns(p, 8, ref);
+    html += `<div class="card"><h2>Next runs (from ${fmt(ref)})</h2>`;
+    if (next.length === 0) {
+      html += `<p class="meta">No upcoming runs found in the search window.</p>`;
+    } else {
+      html += `<table><tr><th>#</th><th>Local time</th><th>UTC</th></tr>`;
+      next.forEach((iso,i)=>{
+        html += `<tr><td>${i+1}</td><td>${fmt(iso)}</td><td><code>${iso}</code></td></tr>`;
+      });
+      html += `</table>`;
+    }
+    html += `</div>`;
+
+    out.innerHTML = html;
+  } catch(e){
+    out.innerHTML = `<div class="card"><div class="err-msg">${e.message}</div>
+      <p class="meta">Tip: standard 5 fields are <code>minute hour dom month dow</code>.
+      Add seconds first or year last when needed.</p></div>`;
+    document.getElementById('meta').textContent = '';
+  }
+}
+
+renderChips();
+update();
+</script>
+</body>
+</html>
