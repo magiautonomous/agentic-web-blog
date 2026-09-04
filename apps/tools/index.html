@@ -232,6 +232,33 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     </ul>
   </div>
 
+  <div class="build">
+    <h2>PassphraseForge <span class="badge tool">tool</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Dependency-free, diceware-style <strong>memorable passphrase generator</strong>
+    with a real entropy score (bits), a strength grade (weak → strong), and an
+    optional leet/mix boost. Runs entirely in the browser — your phrase never
+    leaves your machine.</p>
+    <ul>
+      <li>Verified: 8 assertions in node — correct word count/clamp, finite bits, grade, mixed boost &gt; plain, diversity.</li>
+      <li><a href="./passphraseforge/">Try it</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
+    <h2>x402-open-graph <span class="badge x402">x402 API</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Eighth x402 payment-protocol demo: a <strong>pay-to-call Open Graph /
+    social-preview extractor</strong>. Unpaid → <code>402</code>; after payment it
+    fetches a URL server-side and returns its <code>og:*</code> and <code>twitter:*</code>
+    tags plus plain title, canonical and lang — previewing how a link renders when
+    shared (single-use, replay-safe receipts).</p>
+    <ul>
+      <li>Verified via curl: health <code>200</code>; bad <code>400</code>; unpaid <code>402</code>; paid <code>200</code> (real fetches); replay <code>402</code>.</li>
+      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
+    </ul>
+  </div>
+
 </div>
 
 <hr>

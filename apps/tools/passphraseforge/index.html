@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PassphraseForge — memorable passphrase generator</title>
+<meta name="description" content="Dependency-free diceware-style passphrase generator with a real entropy score: memorable words, optional leet/mix boost, and a strength grade. Runs entirely in the browser.">
+<style>
+  :root{--fg:#1a1a1a;--muted:#64748b;--line:#e2e8f0;--accent:#0f766e;--ok:#065f46;--warn:#92400e;--err:#b91c1c}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:820px;margin:0 auto;padding:24px 20px 60px;color:var(--fg);line-height:1.6}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 20px;font-size:14px}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  label{font-size:14px;color:var(--fg)}
+  select,button{padding:9px 16px;border:1px solid var(--line);border-radius:8px;font-size:14px;cursor:pointer}
+  button{background:var(--accent);color:#fff;border:0;font-weight:600}
+  button.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .toggle{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
+  .toggle input{width:18px;height:18px}
+  .card{border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-top:20px;background:#f8fafc}
+  .card h3{margin:0 0 10px;font-size:16px;border-bottom:1px solid var(--line);padding-bottom:6px}
+  .phrase{font-size:22px;font-weight:600;letter-spacing:.5px;word-break:break-all;background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px;font-family:ui-monospace,Menlo,monospace}
+  .meta{display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .bits{font-size:20px;font-weight:700}
+  .grade{display:inline-block;padding:3px 12px;border-radius:8px;color:#fff;font-weight:600;font-size:14px}
+  .gstrong{background:#059669}.ggood{background:#0891b2}.gok{background:#d97706}.gweak{background:#b91c1c}
+  .note{color:var(--muted);font-size:13px;margin-top:8px}
+  .typ{display:inline-block;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;padding:2px 10px;border-radius:14px;font-size:13px;margin:3px 4px 0 0}
+  #status{color:#b45309;font-size:13px;min-height:18px;margin-top:10px}
+  code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<h1>PassphraseForge</h1>
+<p class="sub">Dependency-free, diceware-style <strong>memorable passphrase generator</strong> with a real entropy score (bits), a strength grade, and an optional leet/mix boost. Runs entirely in the browser — your phrase never leaves your machine.</p>
+
+<div class="row">
+  <label>Words
+    <select id="count">
+      <option value="3">3 words</option>
+      <option value="4" selected>4 words</option>
+      <option value="5">5 words</option>
+      <option value="6">6 words</option>
+      <option value="8">8 words</option>
+    </select>
+  </label>
+  <label class="toggle"><input type="checkbox" id="mix"> Boost (leet + capitals + symbols)</label>
+  <button id="gen">Generate</button>
+  <button id="copy" class="secondary">Copy</button>
+</div>
+<div id="status"></div>
+
+<div id="result" style="display:none">
+  <div class="card">
+    <h3>Passphrase</h3>
+    <div class="phrase" id="phrase"></div>
+    <div class="meta">
+      <span class="bits" id="bits">—</span>
+      <span class="grade" id="grade">–</span>
+    </div>
+    <div class="note" id="note"></div>
+  </div>
+  <div class="card">
+    <h3>Words used</h3>
+    <div id="words"></div>
+  </div>
+</div>
+
+<script src="pass-engine.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+
+function render(){
+  const n = parseInt($('count').value, 10);
+  const useMix = $('mix').checked;
+  const r = useMix ? mixed(n) : passphrase(n);
+  $('result').style.display='block';
+  $('phrase').textContent = r.phrase;
+  $('bits').textContent = '~' + r.bits + ' bits';
+  $('grade').textContent = r.grade.level;
+  $('grade').className = 'grade g' + r.grade.level;
+  $('note').textContent = r.grade.note + ' ' + (r.note || '');
+  $('words').innerHTML = r.words.map(w => '<span class="typ">' + esc(w) + '</span>').join('');
+}
+
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+$('gen').addEventListener('click', ()=>{ $('status').textContent=''; render(); });
+$('copy').addEventListener('click', ()=>{
+  const t = $('phrase').textContent;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>{$('status').textContent='Copied to clipboard.';}).catch(()=>{$('status').textContent='Could not copy — select & copy manually.';});
+  } else { $('status').textContent='Clipboard unavailable — select & copy manually.'; }
+});
+render();
+$('phrase').addEventListener('click', ()=>{ this.select && this.select(); });
+</script>
+</body>
+</html>
