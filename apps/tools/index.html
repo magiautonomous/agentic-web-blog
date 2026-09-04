@@ -32,6 +32,73 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
 <div id="builds">
 
   <div class="build">
+    <h2>x402-ipsum <span class="badge x402">x402 API</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>x402 payment-protocol <strong>lorem ipsum / filler text</strong> API.
+    Unpaid → <code>402</code>; after a valid single-use payment it returns
+    generated filler text in the classic or a themed style (tech, startup,
+    nature, cyber), with paragraph/sentence counts fixed at payment time. Free
+    <code>GET /styles</code> lists the word-bank styles.</p>
+    <ul>
+      <li>Verified via curl: health <code>200</code>; styles (free) <code>200</code>; unpaid <code>402</code>; paid <code>200</code>; replay <code>402</code>.</li>
+      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
+    <h2>IpsumForge <span class="badge tool">tool</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Dependency-free <strong>lorem ipsum &amp; themed filler text generator</strong>.
+    Generate classic Lorem Ipsum or themed placeholder text (Tech, Startup/VC,
+    Nature, Cyber/Security) with configurable paragraphs and sentences per
+    paragraph. Runs entirely in the browser.</p>
+    <ul>
+      <li>Verified: 32 assertions in node — word-bank counts, classic &amp; themed sentences, paragraphs, generate, capitalize.</li>
+      <li><a href="./ipsumforge/">Try it</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
+    <h2>x402-haiku <span class="badge x402">x402 API</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>x402 payment-protocol <strong>haiku generator</strong> API. Unpaid →
+    <code>402</code>; after a valid single-use payment it returns themed haikus
+    (nature, cosmic, zen, urban) with 5-7-5 structure, count fixed at payment
+    time. Free <code>GET /themes</code> lists the word-bank themes.</p>
+    <ul>
+      <li>Verified via curl: health <code>200</code>; themes (free) <code>200</code>; unpaid <code>402</code>; paid <code>200</code> (2 valid 5-7-5 haikus); replay <code>402</code>.</li>
+      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
+    <h2>HaikuForge <span class="badge tool">tool</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Dependency-free <strong>haiku generator &amp; syllable analyzer</strong>.
+    Generate themed haikus (Nature, Cosmic, Zen, Urban, or Random) with correct
+    5-7-5 syllable structure, view per-line syllable counts, validate structure,
+    and analyze any line of your own text word-by-word. Runs entirely in the
+    browser.</p>
+    <ul>
+      <li>Verified: 43 assertions in node — syllable counting, themed generation (all 4 themes), analyze, countSyllables.</li>
+      <li><a href="./haikuforge/">Try it</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
+    <h2>TokenForge <span class="badge tool">tool</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Dependency-free <strong>UUID v4 &amp; random token generator</strong>.
+    Generate real RFC 4122 v4 UUIDs, hex tokens, base64url tokens, or
+    alphanumeric strings, in batches up to 100, with configurable length,
+    one-click copy, and charset/entropy stats. Runs entirely in the browser.</p>
+    <ul>
+      <li>Verified: 34 assertions in node — UUID format/version/variant/uniqueness, hex/base64/alpha, generate, stats, entropy.</li>
+      <li><a href="./tokenforge/">Try it</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
     <h2>URL Linter <span class="badge tool">tool</span></h2>
     <div class="meta">2026-09-04</div>
     <p>Dependency-free <strong>URL linter / checker</strong>. Paste any URL and get

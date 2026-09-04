@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TokenForge — UUID / Token Generator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0d1117;color:#c9d1d9;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+h1{font-size:2rem;margin-bottom:.3rem}
+.sub{color:#8b949e;margin-bottom:2rem;font-size:.95rem}
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:1.5rem;width:100%;max-width:640px;margin-bottom:1.5rem}
+label{display:block;font-size:.85rem;color:#8b949e;margin-bottom:.4rem}
+select,input[type=number]{width:100%;padding:.55rem .75rem;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:1rem;margin-bottom:1rem}
+.row{display:flex;gap:1rem}
+.row>div{flex:1}
+button{background:#238636;border:none;color:#fff;padding:.65rem 1.4rem;border-radius:6px;font-size:1rem;cursor:pointer;font-weight:600}
+button:hover{background:#2ea043}
+button.secondary{background:#30363d}
+button.secondary:hover{background:#3d444d}
+.btn-row{display:flex;gap:.75rem;margin-top:1rem}
+.results{margin-top:1.5rem}
+.results h3{font-size:1rem;margin-bottom:.75rem;color:#8b949e}
+.result-item{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:.65rem .85rem;margin-bottom:.5rem;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;word-break:break-all}
+.result-item .copy{background:none;border:none;color:#58a6ff;cursor:pointer;font-size:.85rem;padding:.2rem .4rem}
+.result-item .copy:hover{text-decoration:underline}
+.stat{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:.75rem;margin-bottom:.5rem;font-size:.85rem}
+.stat b{color:#58a6ff}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:.5rem 1.2rem;border-radius:8px;font-size:.9rem;display:none;z-index:100}
+</style>
+</head>
+<body>
+
+<h1>&#x1f531; TokenForge</h1>
+<p class="sub">UUID v4 + random token generator &mdash; runs entirely in your browser</p>
+
+<div class="card">
+  <label>Token type</label>
+  <select id="kind">
+    <option value="uuid">UUID v4</option>
+    <option value="hex">Hex token</option>
+    <option value="base64">Base64url token</option>
+    <option value="alphanum">Alphanumeric</option>
+  </select>
+  <div class="row">
+    <div>
+      <label>Count (1–100)</label>
+      <input type="number" id="count" value="10" min="1" max="100">
+    </div>
+    <div>
+      <label>Length (hex bytes or chars)</label>
+      <input type="number" id="length" value="24" min="4" max="128">
+    </div>
+  </div>
+  <div class="btn-row">
+    <button onclick="generate()">Generate</button>
+    <button class="secondary" onclick="copyAll()">Copy all</button>
+    <button class="secondary" onclick="clearResults()">Clear</button>
+  </div>
+</div>
+
+<div class="card results" id="resultsCard" style="display:none">
+  <h3 id="resultsTitle">Results</h3>
+  <div id="results"></div>
+  <div id="stats"></div>
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script src="token-engine.js"></script>
+<script>
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => showToast());
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = 0;
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast();
+  }
+}
+function showToast() {
+  const t = document.getElementById('toast');
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 1200);
+}
+let lastGenerated = [];
+function generate() {
+  const kind = document.getElementById('kind').value;
+  const count = parseInt(document.getElementById('count').value) || 10;
+  const length = parseInt(document.getElementById('length').value) || 24;
+  const results = TokenEngine.generate({ kind, count, length });
+  lastGenerated = results;
+  const card = document.getElementById('resultsCard');
+  card.style.display = 'block';
+  document.getElementById('resultsTitle').textContent = 'Results (' + results.length + ')';
+  const container = document.getElementById('results');
+  container.innerHTML = results.map(function(t) {
+    return '<div class="result-item"><span>' + t + '</span><button class="copy" onclick="copyToClipboard(\'' + t + '\')">copy</button></div>';
+  }).join('');
+  var s = TokenEngine.stats(results[0]);
+  document.getElementById('stats').innerHTML =
+    '<div class="stat"><b>Length:</b> ' + s.length + ' chars &nbsp;|&nbsp; <b>Charset:</b> ' + s.charsetSize + ' unique &nbsp;|&nbsp; <b>Entropy:</b> ' + s.entropyBits + ' bits</div>';
+}
+function copyAll() {
+  if (lastGenerated.length) copyToClipboard(lastGenerated.join('\n'));
+}
+function clearResults() {
+  document.getElementById('resultsCard').style.display = 'none';
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('stats').innerHTML = '';
+  lastGenerated = [];
+}
+generate();
+</script>
+</body>
+</html>

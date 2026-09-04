@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HaikuForge — Haiku Generator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0d1420;color:#e6edf3;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+h1{font-size:2rem;margin-bottom:.3rem}
+.sub{color:#8b949e;margin-bottom:2rem;font-size:.95rem}
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:1.5rem;width:100%;max-width:640px;margin-bottom:1.5rem}
+label{display:block;font-size:.85rem;color:#8b949e;margin-bottom:.4rem}
+select,input[type=number]{width:100%;padding:.55rem .75rem;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:1rem;margin-bottom:1rem}
+.row{display:flex;gap:1rem}
+.row>div{flex:1}
+button{background:#1f6feb;border:none;color:#fff;padding:.65rem 1.4rem;border-radius:6px;font-size:1rem;cursor:pointer;font-weight:600}
+button:hover{background:#388bfd}
+button.secondary{background:#30363d}
+button.secondary:hover{background:#3d444d}
+.btn-row{display:flex;gap:.75rem;margin-top:1rem}
+.poem{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:1.25rem;margin-bottom:1rem}
+.poem .lines{font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:1.3rem;color:#e6edf3;line-height:1.6;text-align:center}
+.poem .meta{font-size:.8rem;color:#8b949e;margin-top:.75rem;text-align:center}
+.poem .meta span{margin:0 .5rem}
+.badge{display:inline-block;background:#1f6feb33;color:#58a6ff;border:1px solid #1f6feb66;border-radius:20px;padding:.15rem .7rem;font-size:.78rem}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:.5rem 1.2rem;border-radius:8px;font-size:.9rem;display:none;z-index:100}
+</style>
+</head>
+<body>
+
+<h1>&#x1f33f; HaikuForge</h1>
+<p class="sub">haiku generator &amp; syllable analyzer &mdash; runs entirely in your browser</p>
+
+<div class="card">
+  <label>Theme</label>
+  <select id="theme">
+    <option value="nature">Nature</option>
+    <option value="cosmic">Cosmic</option>
+    <option value="zen">Zen</option>
+    <option value="urban">Urban</option>
+    <option value="random">Random</option>
+  </select>
+  <div class="row">
+    <div>
+      <label>Number of haikus (1–20)</label>
+      <input type="number" id="count" value="1" min="1" max="20">
+    </div>
+    <div>
+      <label>&nbsp;</label>
+      <div class="btn-row">
+        <button onclick="generate()">Generate</button>
+        <button class="secondary" onclick="copyAll()">Copy all</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="resultsCard" style="display:none">
+  <h3 style="margin-bottom:1rem" id="resultsTitle">Haikus</h3>
+  <div id="results"></div>
+</div>
+
+<div class="card">
+  <label>Analyze your own text (press Enter)</label>
+  <input type="text" id="analyzeInput" placeholder="mountain path of stone...">
+  <div id="analyzeOut"></div>
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script src="haiku-engine.js"></script>
+<script>
+function copyClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function(){ showToast(); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast();
+  }
+}
+function showToast() {
+  var t = document.getElementById('toast');
+  t.style.display = 'block';
+  setTimeout(function(){ t.style.display = 'none'; }, 1200);
+}
+var poems = [];
+function generate() {
+  var theme = document.getElementById('theme').value;
+  var count = parseInt(document.getElementById('count').value) || 1;
+  var themeArg = theme === 'random' ? null : theme;
+  poems = HaikuEngine.generate(themeArg, { count: count });
+  var card = document.getElementById('resultsCard');
+  card.style.display = 'block';
+  document.getElementById('resultsTitle').textContent = 'Haikus (' + poems.length + ')';
+  var container = document.getElementById('results');
+  var html = '';
+  for (var i = 0; i < poems.length; i++) {
+    var poem = poems[i];
+    var analysis = HaikuEngine.analyze(poem);
+    var lines = poem.lines.map(function(l, idx) {
+      var n = idx === 0 ? 5 : idx === 1 ? 7 : 5;
+      var countS = HaikuEngine.analyzeLine(l).totalSyllables;
+      return l + ' <span style="color:#8b949e;font-size:.75rem;font-style:normal">(' + countS + '/' + n + ')</span>';
+    }).join('<br>');
+    html += '<div class="poem">' +
+      '<div class="lines">' + lines + '</div>' +
+      '<div class="meta"><span class="badge">' + poem.theme + '</span>' +
+      '<span>structure ' + analysis.structure + '</span>' +
+      '<span>' + (analysis.isValid ? 'valid 5-7-5' : 'check syllables') + '</span>' +
+      '<button class="secondary" style="margin-left:.75rem;padding:.25rem .6rem;font-size:.8rem" onclick="copyClipboard(\'' +
+        poem.lines.join('\\n').replace(/'/g, '\\\'') + '\')">copy</button></div></div>';
+  }
+  container.innerHTML = html;
+}
+function copyAll() {
+  if (poems.length) {
+    var text = poems.map(function(p){ return p.lines.join('\n'); }).join('\n\n');
+    copyClipboard(text);
+  }
+}
+document.getElementById('analyzeInput').addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  var text = this.value.trim();
+  var out = document.getElementById('analyzeOut');
+  if (!text) { out.innerHTML = ''; return; }
+  var words = HaikuEngine.countSyllables(text);
+  var list = words.map(function(w){ return '<span style="display:inline-block;margin:2px 6px 2px 0;background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:2px 8px;font-size:.85rem"><b>' + w.syllables + '</b> ' + (w.word || '?') + '</span>'; }).join('');
+  var total = words.reduce(function(s, w){ return s + w.syllables; }, 0);
+  out.innerHTML = '<div style="margin-top:.6rem">' + list + '</div>' +
+    '<div style="margin-top:.6rem;color:#8b949e;font-size:.9rem">Total: <b style="color:#58a6ff">' + total + '</b> syllables</div>';
+});
+generate();
+</script>
+</body>
+</html>
