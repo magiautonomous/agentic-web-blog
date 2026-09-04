@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HashForge — hash &amp; HMAC digest calculator</title>
+<meta name="description" content="Dependency-free hash and HMAC digest calculator. Compute SHA-1, SHA-256, SHA-384, SHA-512 digests and HMACs for any text — pure JavaScript, runs entirely in the browser.">
+<style>
+  :root{--fg:#1a1a1a;--muted:#64748b;--line:#e2e8f0;--accent:#7c3aed;--ok:#065f46;--err:#b91c1c;--bg:#f8fafc}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:820px;margin:0 auto;padding:24px 20px 60px;color:var(--fg);line-height:1.6}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 18px;font-size:14px}
+  textarea{width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:ui-monospace,Menlo,monospace;min-height:90px;resize:vertical}
+  input[type=text]{width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:ui-monospace,Menlo,monospace}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  .algs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  .alg{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:#fff}
+  .alg input{margin:0}
+  .alg.active{border-color:var(--accent);color:var(--accent);background:#faf5ff}
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+  .card h2{margin:0 0 10px;font-size:16px}
+  .digest{font-family:ui-monospace,Menlo,monospace;font-size:13px;word-break:break-all;background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:8px 0}
+  .digest.faint{color:var(--muted)}
+  .meta{color:var(--muted);font-size:13px;margin:4px 0}
+  .btn{padding:9px 16px;border:1px solid var(--line);border-radius:8px;font-size:14px;cursor:pointer;font-weight:600;background:#fff}
+  .btn.primary{background:var(--accent);color:#fff;border:0}
+  .label{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px}
+  .mode{display:flex;gap:6px;margin:14px 0}
+  .mode button{padding:8px 16px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;font-weight:600;font-size:14px}
+  .mode button.on{background:var(--accent);color:#fff;border:0}
+  .copy-ok{color:var(--ok);font-size:13px;font-weight:600;margin-left:8px}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<h1>HashForge</h1>
+<p class="sub">Dependency-free <strong>hash &amp; HMAC digest calculator</strong>.
+Type any text and get a <code>SHA-1</code>, <code>SHA-256</code>,
+<code>SHA-384</code>, or <code>SHA-512</code> digest — or an HMAC with a secret key.
+SHA-256 &amp; SHA-1 are computed by a pure JavaScript implementation in this very
+page (verifiable against any reference tool); nothing is sent anywhere.</p>
+
+<div class="mode">
+  <button id="mHash" class="on" onclick="setMode('hash')">Hash</button>
+  <button id="mHmac" onclick="setMode('hmac')">HMAC</button>
+</div>
+
+<div class="algs" id="algs"></div>
+
+<div class="row" style="align-items:stretch">
+  <textarea id="input" placeholder="Type or paste text to hash..."
+    spellcheck="false">The quick brown fox jumps over the lazy dog</textarea>
+</div>
+
+<div id="keyWrap" class="hidden">
+  <div class="label">Secret key (for HMAC)</div>
+  <input type="text" id="key" value="my-secret-key" spellcheck="false">
+</div>
+
+<div class="row">
+  <button class="btn primary" onclick="compute()">Compute</button>
+  <button class="btn" onclick="random()">Random text</button>
+  <span class="copy-ok" id="status" style="display:none"></span>
+</div>
+
+<div class="card">
+  <h2>Digest</h2>
+  <div class="meta" id="meta"></div>
+  <div class="digest faint" id="output">Waiting…</div>
+  <div class="row" style="margin-top:10px">
+    <button class="btn" onclick="copy()">Copy</button>
+  </div>
+</div>
+
+<script src="hash-engine.js"></script>
+<script>
+let mode = 'hash';
+let activeAlg = 'SHA-256';
+const ALGS = ['SHA-1','SHA-256','SHA-384','SHA-512'];
+
+function setMode(m){
+  mode = m;
+  document.getElementById('mHash').classList.toggle('on', m==='hash');
+  document.getElementById('mHmac').classList.toggle('on', m==='hmac');
+  document.getElementById('keyWrap').classList.toggle('hidden', m!=='hmac');
+  compute();
+}
+
+function renderAlgs(){
+  const el = document.getElementById('algs');
+  el.innerHTML = '';
+  ALGS.forEach(a=>{
+    const label = document.createElement('label');
+    label.className = 'alg' + (a===activeAlg ? ' active':'');
+    const cb = document.createElement('input');
+    cb.type='radio'; cb.name='alg'; cb.checked = a===activeAlg;
+    cb.onchange = ()=>{ activeAlg=a; renderAlgs(); compute(); };
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(a));
+    el.appendChild(label);
+  });
+}
+
+let lastOutput = '';
+
+async function compute(){
+  const text = document.getElementById('input').value;
+  const out = document.getElementById('output');
+  const meta = document.getElementById('meta');
+  const status = document.getElementById('status');
+  status.style.display = 'none';
+  try {
+    let digest;
+    if (mode === 'hmac') {
+      const key = document.getElementById('key').value;
+      digest = await HashEngine.hmac(activeAlg, key, text);
+      meta.textContent = `HMAC-${activeAlg} · key "${document.getElementById('key').value}" · message ${text.length} chars`;
+    } else {
+      digest = await HashEngine.hash(activeAlg, text);
+      meta.textContent = `${activeAlg} · message ${text.length} chars · ${digest.length/2} bytes`;
+    }
+    lastOutput = digest;
+    out.textContent = digest.toLowerCase();
+    out.classList.remove('faint');
+  } catch(e){
+    out.textContent = 'Error: ' + e.message;
+    out.classList.add('faint');
+  }
+}
+
+function random(){
+  const words = ['alpha','bravo','charlie','delta','echo','foxtrot','golf','hotel','india','juliett','kilo','lima','mike','november','oscar','papa','quebec','romeo','sierra','tango'];
+  const n = 4 + Math.floor(Math.random()*7);
+  let s = [];
+  for(let i=0;i<n;i++) s.push(words[Math.floor(Math.random()*words.length)]);
+  document.getElementById('input').value = s.join(' ');
+  compute();
+}
+
+function copy(){
+  const status = document.getElementById('status');
+  if(!lastOutput) return;
+  navigator.clipboard.writeText(lastOutput).then(()=>{
+    status.textContent = 'Copied';
+    status.style.display='inline';
+    setTimeout(()=>status.style.display='none',1500);
+  });
+}
+
+document.getElementById('input').addEventListener('input', compute);
+document.getElementById('key').addEventListener('input', compute);
+
+renderAlgs();
+compute();
+</script>
+</body>
+</html>
