@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>URLForge — URL parser / editor / cleaner</title>
+<meta name="description" content="Dependency-free URL parser, editor, and cleaner. Decompose any URL into its parts, edit query parameters, and strip tracking params. Runs entirely in the browser.">
+<style>
+  :root{--fg:#1a1a1a;--muted:#64748b;--line:#e2e8f0;--accent:#0ea5e9;--ok:#065f46;--err:#b91c1c;--bg:#f8fafc}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:860px;margin:0 auto;padding:24px 20px 60px;color:var(--fg);line-height:1.6}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 18px;font-size:14px}
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+  .card h2{margin:0 0 10px;font-size:16px}
+  .url-input{width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:ui-monospace,Menlo,monospace}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  .btn{padding:9px 16px;border:1px solid var(--line);border-radius:8px;font-size:14px;cursor:pointer;font-weight:600;background:#fff}
+  .btn.primary{background:var(--accent);color:#fff;border:0}
+  .parts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:12px 0}
+  .part{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 12px;text-align:center}
+  .part .k{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .part .v{font-family:ui-monospace,Menlo,monospace;font-size:15px;font-weight:600;word-break:break-all;color:var(--accent)}
+  .part .v.empty{color:var(--muted);font-weight:400;font-style:italic}
+  .params{margin:12px 0}
+  .param-row{display:flex;gap:8px;align-items:center;margin:6px 0;font-family:ui-monospace,Menlo,monospace;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+  .param-row .k{font-weight:600;color:var(--accent);min-width:30%}
+  .param-row .v{color:var(--fg);word-break:break-all}
+  .param-empty{color:var(--muted);font-size:13px;font-style:italic}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+  .query-editor{margin:12px 0}
+  .qe-row{display:flex;gap:6px;margin:6px 0;align-items:center}
+  .qe-row input[type=text]{flex:1;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-family:ui-monospace,Menlo,monospace}
+  .qe-row .rm{padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:#fef2f2;color:var(--err);cursor:pointer;font-size:12px;font-weight:600}
+  .qe-add{padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;font-size:13px;font-weight:600}
+  .output{font-family:ui-monospace,Menlo,monospace;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:8px 0;word-break:break-all}
+  .error{color:var(--err);font-size:13px;margin:4px 0}
+  .removed{color:var(--ok);font-size:13px;margin:4px 0}
+</style>
+</head>
+<body>
+<h1>URLForge</h1>
+<p class="sub">Dependency-free <strong>URL parser / editor / cleaner</strong>.
+Paste any URL to decompose it into its parts, view and edit query parameters,
+strip tracking params (utm_*, gclid, fbclid, etc.), and rebuild the cleaned
+URL. Supports auth, IPv6 hosts, ports, paths, hashes. Runs entirely in the
+browser.</p>
+
+<div class="card">
+  <h2>URL Input</h2>
+  <input type="text" class="url-input" id="urlIn" value="https://example.com/shop/products?utm_source=google&utm_campaign=spring&page=2&product_id=42#reviews"
+    oninput="process()" spellcheck="false">
+  <div class="toolbar">
+    <button class="btn" onclick="document.getElementById('urlIn').value='https://user:pass@example.com:8080/api/users?role=admin&sort=name&page=1';process()">Sample 1</button>
+    <button class="btn" onclick="document.getElementById('urlIn').value='http://localhost:3000/dashboard?report=Q1#top';process()">Sample 2</button>
+    <button class="btn" onclick="document.getElementById('urlIn').value='https://[::1]:8080/path';process()">IPv6</button>
+  </div>
+  <div id="error"></div>
+</div>
+
+<div class="card">
+  <h2>Parts</h2>
+  <div id="parts" class="parts-grid"></div>
+</div>
+
+<div class="card">
+  <h2>Query Parameters</h2>
+  <div class="toolbar">
+    <button class="btn primary" onclick="cleanTracking()">Strip Tracking Params</button>
+    <button class="btn" onclick="addQERow()">+ Add Param</button>
+  </div>
+  <div id="params" class="params"></div>
+</div>
+
+<div class="card">
+  <h2>Query Editor</h2>
+  <div id="qe" class="query-editor"></div>
+  <div id="removed" class="removed"></div>
+  <button class="btn primary" onclick="rebuild()">Rebuild URL</button>
+</div>
+
+<div class="card">
+  <h2>Result</h2>
+  <div id="output" class="output">Paste a URL above.</div>
+</div>
+
+<script src="url-engine.js"></script>
+<script>
+let editParams = {};
+
+function process() {
+  const input = document.getElementById('urlIn').value;
+  const errEl = document.getElementById('error');
+  const partsEl = document.getElementById('parts');
+  if (!input.trim()) { errEl.innerHTML=''; partsEl.innerHTML=''; document.getElementById('output').textContent='Paste a URL above.'; return; }
+  const u = URLForge.parse(input);
+  if (!u) return;
+
+  errEl.innerHTML = '';
+  const part = (k, v) => '<div class="part"><div class="k">' + k + '</div><div class="v' + (v ? '' : ' empty') + '">' + esc(v || '—') + '</div></div>';
+  partsEl.innerHTML =
+    part('Protocol', u.protocol) + part('Username', u.username) + part('Host', u.host) +
+    part('Port', u.port) + part('Path', u.path) + part('Query', u.query) +
+    part('Fragment', u.fragment);
+
+  editParams = {};
+  for (const [k, v] of Object.entries(u.params || {})) {
+    editParams[k] = Array.isArray(v) ? v.join(',') : String(v);
+  }
+  renderParams();
+  renderQE();
+  renderOutput(u.toString());
+}
+
+function renderParams() {
+  const el = document.getElementById('params');
+  const keys = Object.keys(editParams);
+  if (!keys.length) { el.innerHTML = '<div class="param-empty">No query parameters.</div>'; return; }
+  el.innerHTML = keys.map(k =>
+    '<div class="param-row"><span class="k">' + esc(k) + '</span><span class="v">= ' + esc(editParams[k]) + '</span></div>'
+  ).join('');
+}
+
+function renderQE() {
+  const el = document.getElementById('qe');
+  const keys = Object.keys(editParams);
+  if (!keys.length) { el.innerHTML = '<div class="param-empty">No query params to edit — use "Add Param".</div>'; return; }
+  el.innerHTML = keys.map(k =>
+    '<div class="qe-row"><input type="text" value="' + esc(k) + '" placeholder="key" onchange="renameK(\'' + esc(k) + '\',this.value)">' +
+    '<input type="text" value="' + esc(editParams[k]) + '" placeholder="value" onchange="editV(\'' + esc(k) + '\',this.value)">' +
+    '<button class="rm" onclick="removeQEK(\'' + esc(k) + '\')">✕</button></div>'
+  ).join('');
+}
+
+function renderOutput(s) {
+  document.getElementById('output').textContent = s;
+  document.getElementById('removed').innerHTML = '';
+}
+
+function addQERow() {
+  const n = Object.keys(editParams).length;
+  editParams['param' + (n + 1)] = '';
+  renderParams(); renderQE();
+}
+
+function renameK(oldK, newK) {
+  const v = editParams[oldK];
+  delete editParams[oldK];
+  editParams[newK.trim() || oldK] = v;
+  renderParams(); renderQE();
+}
+
+function editV(k, v) { editParams[k] = v; renderParams(); }
+
+function removeQEK(k) { delete editParams[k]; renderParams(); renderQE(); }
+
+function rebuild() {
+  let input = document.getElementById('urlIn').value;
+  const u = URLForge.parse(input);
+  if (!u) return;
+  let q = URLForge.queryToString(editParams);
+  // rebuild with current base, but strip the old query
+  const base = u.protocol + (u.protocol ? '://' : '') + u.host + (u.port ? ':' + u.port : '') + (u.path || '');
+  renderOutput(base + (q ? '?' + q : '') + (u.fragment ? '#' + u.fragment : ''));
+}
+
+function cleanTracking() {
+  const input = document.getElementById('urlIn').value;
+  const res = URLForge.removeTracking(input);
+  document.getElementById('urlIn').value = res.url;
+  if (res.removed) {
+    document.getElementById('removed').innerHTML = 'Removed tracking parameters.';
+  } else {
+    document.getElementById('removed').innerHTML = '<span style="color:var(--muted)">No tracking parameters found.</span>';
+  }
+  process();
+}
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+process();
+</script>
+</body>
+</html>

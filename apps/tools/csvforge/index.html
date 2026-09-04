@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSVForge — CSV viewer / formatter / validator / converter</title>
+<meta name="description" content="Dependency-free CSV viewer, formatter, validator, and converter. Parse, validate, convert to JSON/Markdown, and see stats — all in the browser.">
+<style>
+  :root{--fg:#1a1a1a;--muted:#64748b;--line:#e2e8f0;--accent:#2563eb;--ok:#065f46;--err:#b91c1c;--warn:#92400e;--bg:#f8fafc}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:860px;margin:0 auto;padding:24px 20px 60px;color:var(--fg);line-height:1.6}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 18px;font-size:14px}
+  textarea{width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:ui-monospace,Menlo,monospace;min-height:100px;resize:vertical}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  .btn{padding:9px 16px;border:1px solid var(--line);border-radius:8px;font-size:14px;cursor:pointer;font-weight:600;background:#fff}
+  .btn.primary{background:var(--accent);color:#fff;border:0}
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+  .card h2{margin:0 0 10px;font-size:16px}
+  .meta{color:var(--muted);font-size:13px;margin:4px 0}
+  .label{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px}
+  .mode{display:flex;gap:6px;margin:14px 0;flex-wrap:wrap}
+  .mode button{padding:8px 16px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;font-weight:600;font-size:13px}
+  .mode button.on{background:var(--accent);color:#fff;border:0}
+  .output{font-family:ui-monospace,Menlo,monospace;font-size:13px;word-break:break-all;background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:8px 0;min-height:60px;overflow-x:auto;white-space:pre}
+  .output.faint{color:var(--muted)}
+  .copy-ok{color:var(--ok);font-size:13px;font-weight:600;margin-left:8px}
+  .error{color:var(--err);font-size:13px;margin:4px 0}
+  .warn{color:var(--warn);font-size:13px;margin:4px 0}
+  select{padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff}
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin:10px 0}
+  .stat-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-align:center}
+  .stat-card .val{font-size:22px;font-weight:700;color:var(--accent)}
+  .stat-card .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-top:2px}
+  table.vtable{width:100%;border-collapse:collapse;font-size:13px;font-family:ui-monospace,Menlo,monospace}
+  table.vtable th,table.vtable td{padding:6px 10px;border:1px solid var(--line);text-align:left}
+  table.vtable th{background:var(--bg);font-weight:600;position:sticky;top:0}
+  table.vtable tr:nth-child(even){background:#fafbfc}
+  .tbl-wrap{max-height:400px;overflow:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+  .valid-badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:13px;font-weight:600}
+  .valid-badge.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+  .valid-badge.bad{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+</style>
+</head>
+<body>
+<h1>CSVForge</h1>
+<p class="sub">Dependency-free <strong>CSV viewer / formatter / validator / converter</strong>.
+Paste any CSV (or TSV / semicolon / pipe-delimited) data to view it as a
+formatted table, export to JSON or Markdown, validate column consistency, and
+see detailed stats. Auto-detects delimiter. Runs entirely in the browser.</p>
+
+<div class="label">Input</div>
+<textarea id="input" placeholder="Paste CSV data here...&#10;name,age,city&#10;Alice,30,NYC&#10;Bob,25,SF" spellcheck="false">name,age,city,role
+Alice,30,NYC,engineer
+Bob,25,SF,designer
+Charlie,35,LA,manager
+Diana,28,Chicago,analyst</textarea>
+
+<div class="row">
+  <button class="btn primary" onclick="process()">Parse &amp; View</button>
+  <button class="btn" onclick="loadSample()">Load Sample</button>
+  <button class="btn" onclick="document.getElementById('input').value='';process()">Clear</button>
+  <label class="label" style="margin:0 0 0 12px">Delimiter:</label>
+  <select id="delim" onchange="process()">
+    <option value="">Auto-detect</option>
+    <option value=",">, (comma)</option>
+    <option value="\t">Tab</option>
+    <option value=";">; (semicolon)</option>
+    <option value="|">| (pipe)</option>
+  </select>
+</div>
+
+<div id="status"></div>
+
+<div class="mode" id="modes">
+  <button class="on" onclick="setMode('table')">Table</button>
+  <button onclick="setMode('json')">JSON</button>
+  <button onclick="setMode('mdtable')">Markdown</button>
+  <button onclick="setMode('formatted')">Formatted</button>
+  <button onclick="setMode('stats')">Stats</button>
+  <button onclick="setMode('validate')">Validate</button>
+</div>
+
+<div id="output" class="output faint">Click "Parse &amp; View" to process CSV data.</div>
+
+<script src="csv-engine.js"></script>
+<script>
+let currentMode = 'table';
+
+function setMode(m) {
+  currentMode = m;
+  document.querySelectorAll('#modes button').forEach(b => {
+    b.className = b.textContent.trim().toLowerCase().replace(/[&\s]+/g,'') === m ? 'on' : '';
+  });
+  if (m === 'table') {
+    document.querySelectorAll('#modes button')[0].className = 'on';
+  }
+  process();
+}
+
+function getDelim() {
+  const v = document.getElementById('delim').value;
+  return v ? { delimiter: v } : {};
+}
+
+function process() {
+  const input = document.getElementById('input').value;
+  const out = document.getElementById('output');
+  if (!input.trim()) {
+    out.className = 'output faint';
+    out.textContent = 'Paste CSV data above to begin.';
+    return;
+  }
+  try {
+    if (currentMode === 'table') renderTable(input, out);
+    else if (currentMode === 'json') renderJSON(input, out);
+    else if (currentMode === 'mdtable') renderMDTable(input, out);
+    else if (currentMode === 'formatted') renderFormatted(input, out);
+    else if (currentMode === 'stats') renderStats(input, out);
+    else if (currentMode === 'validate') renderValidate(input, out);
+  } catch (e) {
+    out.className = 'output';
+    out.innerHTML = '<span class="error">Error: ' + e.message + '</span>';
+  }
+}
+
+function renderTable(input, out) {
+  const rows = CSVForge.parse(input, getDelim());
+  if (!rows.length) { out.className = 'output faint'; out.textContent = 'No data.'; return; }
+  let html = '<table class="vtable"><thead><tr>';
+  rows[0].forEach(h => { html += '<th>' + esc(h) + '</th>'; });
+  html += '</tr></thead><tbody>';
+  for (let i = 1; i < rows.length; i++) {
+    html += '<tr>';
+    rows[i].forEach(c => { html += '<td>' + esc(c) + '</td>'; });
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  out.className = 'output';
+  out.innerHTML = '<div class="tbl-wrap">' + html + '</div>';
+}
+
+function renderJSON(input, out) {
+  const data = CSVForge.toJSON(input, getDelim());
+  out.className = 'output';
+  out.textContent = JSON.stringify(data, null, 2);
+}
+
+function renderMDTable(input, out) {
+  const md = CSVForge.toMarkdownTable(input, getDelim());
+  out.className = 'output';
+  out.textContent = md;
+}
+
+function renderFormatted(input, out) {
+  const ft = CSVForge.formatTable(input, getDelim());
+  out.className = 'output';
+  out.textContent = ft;
+}
+
+function renderStats(input, out) {
+  const s = CSVForge.stats(input, getDelim());
+  out.className = 'output';
+  out.innerHTML = '<div class="stats-grid">' +
+    statCard(s.rows, 'Rows') + statCard(s.columns, 'Columns') +
+    statCard(s.totalFields, 'Total Fields') + statCard(s.emptyFields, 'Empty Fields') +
+    statCard(s.emptyPercent + '%', 'Empty %') + statCard(s.charCount, 'Characters') +
+    statCard(s.avgRowLength, 'Avg Row Len') + statCard(s.delimiter === '\t' ? 'Tab' : s.delimiter, 'Delimiter') +
+    statCard(s.consistentColumns ? 'Yes' : 'No', 'Consistent Cols') +
+    '</div>';
+}
+
+function renderValidate(input, out) {
+  const v = CSVForge.validate(input, getDelim());
+  let html = '<div style="margin-bottom:10px"><span class="valid-badge ' + (v.valid ? 'ok' : 'bad') + '">' +
+    (v.valid ? 'Valid' : 'Invalid') + '</span> <span class="meta" style="margin-left:8px">' +
+    v.rows + ' rows, ' + v.columns + ' columns</span></div>';
+  if (v.errors.length) {
+    html += '<div class="error"><strong>Errors:</strong></div>';
+    v.errors.forEach(e => { html += '<div class="error">' + esc(e.message) + '</div>'; });
+  }
+  if (v.warnings.length) {
+    html += '<div class="warn"><strong>Warnings:</strong></div>';
+    v.warnings.forEach(w => {
+      if (w.duplicate_headers) html += '<div class="warn">Duplicate headers: ' + esc(w.duplicate_headers.join(', ')) + '</div>';
+      else if (w.message) html += '<div class="warn">' + esc(w.message) + '</div>';
+    });
+  }
+  if (!v.errors.length && !v.warnings.length) html += '<div class="meta">No issues found.</div>';
+  out.className = 'output';
+  out.innerHTML = html;
+}
+
+function statCard(val, lbl) {
+  return '<div class="stat-card"><div class="val">' + esc(String(val)) + '</div><div class="lbl">' + esc(lbl) + '</div></div>';
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function loadSample() {
+  document.getElementById('input').value =
+    'name,age,city,department,salary\n' +
+    'Alice,30,NYC,Engineering,95000\n' +
+    'Bob,25,SF,Design,82000\n' +
+    'Charlie,35,LA,Engineering,110000\n' +
+    'Diana,28,Chicago,Marketing,78000\n' +
+    'Eve,32,Boston,Engineering,105000\n' +
+    'Frank,29,Miami,Sales,72000\n' +
+    'Grace,41,Seattle,Design,98000\n' +
+    'Hank,26,Austin,Sales,68000';
+  process();
+}
+
+process();
+</script>
+</body>
+</html>
