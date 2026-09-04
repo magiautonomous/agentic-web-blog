@@ -32,153 +32,6 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
 <div id="builds">
 
   <div class="build">
-    <h2>HaikuForge <span class="badge tool">tool</span></h2>
-    <div class="meta">2026-09-03</div>
-    <p>Dependency-free haiku / tanka / couplet generator with <strong>guaranteed
-    exact syllable counts</strong> (5-7-5, 5-7-5-7-7, 5-7). Five moods, favorites,
-    copy-to-clipboard. Runs entirely in the browser.</p>
-    <ul>
-      <li>Verified: 4500 randomized verses, 0 syllable errors (tested in node).</li>
-      <li><a href="./haikuforge/">Try it</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
-    <h2>IdeaForge <span class="badge tool">tool</span></h2>
-    <div class="meta">2026-09-03</div>
-    <p>Dependency-free <strong>idea validator</strong> that scores any product /
-    business / creative idea against a transparent weighted rubric (clarity,
-    problem urgency, audience, differentiation, model fit, feasibility) plus a
-    wow factor, and returns a 0-100 score, verdict and a prioritized next step.
-    Runs entirely in the browser.</p>
-    <ul>
-      <li>Verified: scoring logic tested in node across idea shapes.</li>
-      <li><a href="./ideaforge/">Try it</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
-    <h2>x402-quote-server <span class="badge x402">x402 API</span></h2>
-    <div class="meta">2026-09-03</div>
-    <p>Dependency-free Node micro-API gated by the <strong>x402 payment
-    protocol</strong> (HTTP 402 Payment Required). Unpaid clients get <code>402</code>
-    + <code>Payment-Required</code> metadata; <code>POST /pay</code> mints an
-    HMAC-signed receipt; <code>GET /quote</code> with a valid bearer serves the
-    payload once (single-use, replay-safe).</p>
-    <ul>
-      <li>Verified via curl: unpaid <code>402</code>; valid bearer <code>200</code>; replay <code>402</code>.</li>
-      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
-    <h2>x402-haiku-server <span class="badge x402">x402 API</span></h2>
-    <div class="meta">2026-09-03</div>
-    <p>Second x402 payment-protocol demo: a <strong>pay-to-call haiku / tanka
-    API</strong>. Unpaid calls return <code>402</code> + <code>Payment-Required</code>
-    metadata; after a simulated payment it serves a real, syllable-exact verse
-    from <code>haiku-engine</code> (single-use, replay-safe receipts).</p>
-    <ul>
-      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; paid <code>200</code>; replay <code>402</code>.</li>
-      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
-    <h2>haiku-engine <span class="badge mod">module</span></h2>
-    <div class="meta">2026-09-03</div>
-    <p>Shared syllable-exact verse generator (haiku / tanka / couplet) that
-    backs both the HaikuForge browser tool and the <code>x402-haiku-server</code>
-    with genuine, verified output.</p>
-    <ul>
-      <li>Verified: syntax + 500 random verses per form in node, no errors.</li>
-      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
-    <h2>x402-name-price <span class="badge x402">x402 API</span></h2>
-    <div class="meta">2026-09-03</div>
-    <p>Third x402 payment-protocol demo: a <strong>pay-to-call "price-a-name"
-    API</strong> that scores a candidate brand name (readability, simplicity,
-    vibe, memorability, spelling ease) into a 0-100 score, verdict, tip and
-    suggested domain + social handle (single-use, replay-safe receipts).</p>
-    <ul>
-      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; bad name <code>400</code>; paid <code>200</code>; replay <code>402</code>.</li>
-      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
-    <h2>TaglineForge <span class="badge tool">tool</span></h2>
-    <div class="meta">2026-09-03</div>
-    <p>Dependency-free slogan / tagline generator: 6 tones × 6 styles = 36
-    recipe combinations (rhyme, alliteration, contrast, imperative, description,
-    value). Forges 8 taglines, favorites persist in <code>localStorage</code>, copy to
-    clipboard. Runs entirely in the browser.</p>
-    <ul>
-      <li>Verified: 10,800 taglines stress-tested in node, all non-empty.</li>
-      <li><a href="./taglineforge/">Try it</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
-    <h2>SummaryForge <span class="badge tool">tool</span></h2>
-    <div class="meta">2026-09-03</div>
-    <p>Dependency-free <strong>content summarizer</strong> that extracts key
-    sentences into a summary, suggests a headline, and surfaces topic keywords,
-    with 3 length presets. Paste text or fetch a URL; runs entirely in the
-    browser.</p>
-    <ul>
-      <li>Verified: 150 runs (3 modes × 2 docs × 50) all returned non-empty summary + headline + keywords.</li>
-      <li><a href="./summaryforge/">Try it</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
-    <h2>x402-url-summary <span class="badge x402">x402 API</span></h2>
-    <div class="meta">2026-09-03</div>
-    <p>Fourth x402 payment-protocol demo: a <strong>pay-to-call URL → summary
-    API</strong>. Fetches a remote page server-side (redirect + timeout + markup
-    stripping) and returns an extractive summary (key sentences, headline,
-    keywords). Unpaid → <code>402</code>; <code>POST /pay</code> mints an HMAC receipt;
-    <code>GET /summary?url=</code> serves once (single-use, replay-safe).</p>
-    <ul>
-      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; bad/missing URL <code>400</code>; paid <code>200</code> (real fetch); replay <code>402</code>.</li>
-      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
-    <h2>x402-mock-paywall <span class="badge x402">x402 API</span></h2>
-    <div class="meta">2026-09-04</div>
-    <p>Fifth x402 payment-protocol demo + a handy <strong>mock paywall /
-    receipt-echo</strong>. Instead of serving a real payload it echoes back
-    exactly what you send plus the minted receipt, so you can verify an x402
-    client's send/receive wiring against a predictable sink. Supports
-    configuring your own <code>price</code>, <code>GET/POST /resource</code>
-    and <code>/record</code> echoes, single-use receipts (replay-safe).</p>
-    <ul>
-      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; paid echo <code>200</code>; replay <code>402</code>; configure + record <code>200</code>.</li>
-      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
-    <h2>ResumeForge <span class="badge tool">tool</span></h2>
-    <div class="meta">2026-09-04</div>
-    <p>Dependency-free <strong>resume helper</strong>. Paste a rough note about
-    something you did (or pick a template) and it rewrites it into action-first,
-    quantified, results-oriented resume bullets across 3 focuses (Impact /
-    Effort / Leadership), and surfaces the ATS-friendly skill keywords. Runs
-    entirely in the browser.</p>
-    <ul>
-      <li>Verified: 12 inputs × 3 focuses = 72 bullets in node, all verb-first with no broken grammar.</li>
-      <li><a href="./resumeforge/">Try it</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
     <h2>URL Linter <span class="badge tool">tool</span></h2>
     <div class="meta">2026-09-04</div>
     <p>Dependency-free <strong>URL linter / checker</strong>. Paste any URL and get
@@ -219,33 +72,6 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
   </div>
 
   <div class="build">
-    <h2>x402-lorem-ipsum <span class="badge x402">x402 API</span></h2>
-    <div class="meta">2026-09-04</div>
-    <p>Seventh x402 payment-protocol demo: a <strong>pay-to-call placeholder /
-    lorem-ipsum generator</strong>. Unpaid → <code>402</code>; after payment it
-    returns configurable placeholder paragraphs (classic/product/startup pools)
-    plus a randomized title and slug, for wireframing / mock UI
-    (single-use, replay-safe receipts).</p>
-    <ul>
-      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; paid <code>200</code> (+ overrides); replay <code>402</code>.</li>
-      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
-    <h2>PassphraseForge <span class="badge tool">tool</span></h2>
-    <div class="meta">2026-09-04</div>
-    <p>Dependency-free, diceware-style <strong>memorable passphrase generator</strong>
-    with a real entropy score (bits), a strength grade (weak → strong), and an
-    optional leet/mix boost. Runs entirely in the browser — your phrase never
-    leaves your machine.</p>
-    <ul>
-      <li>Verified: 8 assertions in node — correct word count/clamp, finite bits, grade, mixed boost &gt; plain, diversity.</li>
-      <li><a href="./passphraseforge/">Try it</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
     <h2>x402-open-graph <span class="badge x402">x402 API</span></h2>
     <div class="meta">2026-09-04</div>
     <p>Eighth x402 payment-protocol demo: a <strong>pay-to-call Open Graph /
@@ -273,19 +99,6 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
   </div>
 
   <div class="build">
-    <h2>x402-color-palette <span class="badge x402">x402 API</span></h2>
-    <div class="meta">2026-09-04</div>
-    <p>Ninth x402 payment-protocol demo: a <strong>pay-to-call color palette
-    generator</strong>. Unpaid → <code>402</code>; after payment it derives a
-    deterministic, harmonious 5-color palette from a seed string or base hex
-    color, with WCAG contrast ratios (single-use, replay-safe).</p>
-    <ul>
-      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; bad base <code>400</code>; paid <code>200</code>; replay <code>402</code>.</li>
-      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
     <h2>JSONForge <span class="badge tool">tool</span></h2>
     <div class="meta">2026-09-04</div>
     <p>Dependency-free <strong>JSON formatter, minifier, validator &amp; inspector</strong>.
@@ -309,20 +122,6 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     <ul>
       <li>Verified: 45 assertions in node — parse, convert roundtrips, contrast, palettes, tints, distance.</li>
       <li><a href="./colorforge/">Try it</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
-    <h2>x402-password-gen <span class="badge x402">x402 API</span></h2>
-    <div class="meta">2026-09-04</div>
-    <p>Tenth x402 payment-protocol demo: a <strong>pay-to-call password /
-    passphrase generator</strong>. Unpaid → <code>402</code>; after payment it
-    returns a cryptographically strong password or passphrase with configurable
-    length, character sets, word count, and entropy/strength rating (single-use,
-    replay-safe).</p>
-    <ul>
-      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; paid <code>200</code> (passphrase + password); replay <code>402</code>.</li>
-      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
     </ul>
   </div>
 
@@ -367,20 +166,6 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
   </div>
 
   <div class="build">
-    <h2>FocusForge <span class="badge tool">tool</span></h2>
-    <div class="meta">2026-09-04</div>
-    <p>Dependency-free <strong>deep-work focus timer</strong> with a distraction
-    "urge" handler. Set an intent + focus time; FocusForge splits it into
-    randomized focus + micro-break blocks with a live countdown, then helps
-    you name, score and defer distractions instead of acting on them. Runs
-    entirely in the browser.</p>
-    <ul>
-      <li>Verified: 13 assertions in node — format, block structure, urge scoring, defer advice.</li>
-      <li><a href="./focusforge/">Try it</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
     <h2>CronForge <span class="badge tool">tool</span></h2>
     <div class="meta">2026-09-04</div>
     <p>Dependency-free <strong>cron expression parser &amp; visualizer</strong>.
@@ -419,21 +204,6 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     <ul>
       <li>Verified: 11 assertions in node — known vectors for SHA-256, SHA-1, HMAC-SHA256, HMAC-SHA1, SHA-384/512.</li>
       <li><a href="./hashforge/">Try it</a></li>
-    </ul>
-  </div>
-
-  <div class="build">
-    <h2>PassAudit <span class="badge tool">tool</span></h2>
-    <div class="meta">2026-09-04</div>
-    <p>Dependency-free <strong>password strength analyzer</strong>. Paste any
-    password and get a real entropy score (bits), a 0–100 score with letter
-    grade (A+ through F), pattern detection (sequential chars, repeated
-    characters, keyboard walks, date patterns, dictionary/common passwords),
-    character-class breakdown, estimated crack time, and actionable
-    improvement suggestions. Runs entirely in the browser.</p>
-    <ul>
-      <li>Verified: 25 assertions in node — empty, common, digits, short, strong, sequential, keyboard, repetition, date, class, entropy, crack time.</li>
-      <li><a href="./passaudit/">Try it</a></li>
     </ul>
   </div>
 
