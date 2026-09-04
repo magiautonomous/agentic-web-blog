@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MetaForge — SEO title &amp; meta description generator</title>
+<meta name="description" content="Dependency-free SEO meta description and title tag generator: paste a rough description and get an optimized title, 3 meta descriptions, a slug and keywords. Runs entirely in the browser.">
+<style>
+  :root{--fg:#1a1a1a;--muted:#64748b;--line:#e2e8f0;--accent:#7c3aed;--ok:#065f46}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:820px;margin:0 auto;padding:24px 20px 60px;color:var(--fg);line-height:1.6}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 20px;font-size:14px}
+  textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--line);border-radius:8px;font:14px/1.5 ui-monospace,Menlo,monospace;box-sizing:border-box;resize:vertical}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  button{padding:9px 18px;border:0;border-radius:8px;background:var(--accent);color:#fff;font-weight:600;cursor:pointer;font-size:14px}
+  button.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .card{border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-top:20px;background:#f8fafc}
+  .card h3{margin:0 0 10px;font-size:16px;border-bottom:1px solid var(--line);padding-bottom:6px}
+  .field{margin-bottom:16px}
+  .label{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-bottom:4px}
+  .label .count{font-size:12px}
+  .ok{color:var(--ok);font-weight:600}
+  .bad{color:#b91c1c;font-weight:600}
+  .box{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff;font-size:14px}
+  .kw{display:inline-block;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;padding:2px 10px;border-radius:14px;font-size:13px;margin:3px 4px 0 0}
+  .hint{font-size:13px;color:var(--muted)}
+  #status{color:#b45309;font-size:13px;min-height:18px;margin-top:10px}
+  code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+  .meta{margin-top:14px;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<h1>MetaForge</h1>
+<p class="sub">Paste a rough description of a page — a product, a post, a service — and get an optimized <strong>&lt;title&gt;</strong>, three <strong>meta descriptions</strong> (all within common search-length limits), a <strong>slug</strong>, and the keywords it surfaced. Runs entirely in the browser; nothing is sent anywhere.</p>
+
+<textarea id="input" placeholder="Describe the page in 1-2 sentences, e.g. ‘Sell handmade ceramics and pottery online with free worldwide shipping.’"></textarea>
+<div class="row">
+  <button id="forge">Forge meta</button>
+  <button id="clear" class="secondary">Clear</button>
+  <span class="hint">Targets: title ≤ ~60 chars · meta ≤ ~155 chars</span>
+</div>
+<div id="status"></div>
+
+<div id="result" style="display:none">
+  <div class="card">
+    <h3>&lt;title&gt;</h3>
+    <div class="label"><span>Optimal page title</span><span class="count" id="titleCount"></span></div>
+    <div class="box" id="titleBox"></div>
+    <div class="label" style="margin-top:8px"><span>Slug</span></div>
+    <div class="box" id="slugBox" style="font-family:ui-monospace,Menlo,monospace"></div>
+  </div>
+
+  <div class="card">
+    <h3>Meta descriptions</h3>
+    <div id="descs"></div>
+  </div>
+
+  <div class="card">
+    <h3>Keywords</h3>
+    <div id="kws"></div>
+  </div>
+</div>
+
+<script src="meta-engine.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+
+function countBadge(len, limit){
+  const ok = len <= limit;
+  return '<span class="' + (ok ? 'ok' : 'bad') + '">' + len + ' / ' + limit + (ok ? ' ✓' : ' — too long') + '</span>';
+}
+
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function render(){
+  const raw = $('input').value.trim();
+  if(!raw){ $('result').style.display='none'; $('status').textContent=''; return; }
+  const r = metaFor(raw);
+  if(r.error){ $('result').style.display='none'; $('status').textContent='Add a sentence or two first.'; return; }
+  $('result').style.display='block';
+  $('status').textContent='';
+
+  $('titleBox').textContent = r.title;
+  $('titleCount').innerHTML = countBadge(r.title.length, 60);
+  $('slugBox').textContent = '/' + r.slug;
+
+  const descs = $('descs'); descs.innerHTML='';
+  r.descriptions.forEach((d,i)=>{
+    const wrap=document.createElement('div'); wrap.style.marginBottom='12px';
+    const lab=document.createElement('div'); lab.className='label';
+    const name=document.createElement('span'); name.textContent='Variant '+(i+1);
+    const cnt=document.createElement('span'); cnt.className='count'; cnt.innerHTML=countBadge(d.length,155);
+    lab.appendChild(name); lab.appendChild(cnt);
+    const box=document.createElement('div'); box.className='box'; box.textContent=d;
+    wrap.appendChild(lab); wrap.appendChild(box);
+    descs.appendChild(wrap);
+  });
+
+  const kws=$('kws'); kws.innerHTML='';
+  r.keywords.forEach(k=>{ const s=document.createElement('span'); s.className='kw'; s.textContent=k; kws.appendChild(s); });
+  if(!r.keywords.length) kws.innerHTML='<span class="hint">No keywords surfaced.</span>';
+}
+
+$('forge').addEventListener('click', ()=>{ $('status').textContent=''; render(); });
+$('clear').addEventListener('click', ()=>{ $('input').value=''; $('result').style.display='none'; $('status').textContent=''; });
+$('input').addEventListener('keydown', e=>{ if((e.metaKey||e.ctrlKey) && e.key==='Enter'){ e.preventDefault(); render(); } });
+$('input').focus();
+</script>
+</body>
+</html>

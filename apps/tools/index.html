@@ -205,6 +205,33 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     </ul>
   </div>
 
+  <div class="build">
+    <h2>MetaForge <span class="badge tool">tool</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Dependency-free <strong>SEO meta description &amp; title generator</strong>.
+    Paste a 1-2 sentence description of a page and get an optimized <code>&lt;title&gt;</code>
+    (≤60 chars), three meta descriptions (≤155 chars), a URL-friendly slug, and the
+    topic keywords it surfaced. Runs entirely in the browser.</p>
+    <ul>
+      <li>Verified: 6 assertions in node — all titles ≤60, all descriptions ≤155, non-empty slug/keywords.</li>
+      <li><a href="./metaforge/">Try it</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
+    <h2>x402-lorem-ipsum <span class="badge x402">x402 API</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Seventh x402 payment-protocol demo: a <strong>pay-to-call placeholder /
+    lorem-ipsum generator</strong>. Unpaid → <code>402</code>; after payment it
+    returns configurable placeholder paragraphs (classic/product/startup pools)
+    plus a randomized title and slug, for wireframing / mock UI
+    (single-use, replay-safe receipts).</p>
+    <ul>
+      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; paid <code>200</code> (+ overrides); replay <code>402</code>.</li>
+      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
+    </ul>
+  </div>
+
 </div>
 
 <hr>
