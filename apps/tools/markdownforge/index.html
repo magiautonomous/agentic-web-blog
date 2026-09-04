@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MarkdownForge — Markdown to HTML converter</title>
+<meta name="description" content="Dependency-free Markdown to HTML converter with live preview, export and copy. Runs entirely in the browser.">
+<style>
+  :root{--fg:#1a1a1a;--muted:#64748b;--line:#e2e8f0;--accent:#0f766e}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:960px;margin:0 auto;padding:24px 20px 60px;color:var(--fg);line-height:1.6}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 20px;font-size:14px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  button{padding:9px 16px;border:1px solid var(--line);border-radius:8px;font-size:14px;cursor:pointer;background:var(--accent);color:#fff;border:0;font-weight:600}
+  button.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .cols{display:flex;gap:16px;flex-wrap:wrap}
+  .col{flex:1 1 46%;min-width:280px}
+  .col label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+  textarea{width:100%;height:320px;border:1px solid var(--line);border-radius:8px;padding:12px;font-family:ui-monospace,Menlo,monospace;font-size:13px;resize:vertical;box-sizing:border-box}
+  #preview{border:1px solid var(--line);border-radius:8px;padding:12px 16px;height:320px;overflow:auto;background:#fff}
+  #preview h1,#preview h2,#preview h3{border-bottom:1px solid var(--line);padding-bottom:6px}
+  #preview code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+  #preview pre{background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;overflow:auto}
+  #preview pre code{background:none;color:inherit;padding:0}
+  #preview blockquote{border-left:4px solid var(--line);margin:0 0 12px;padding:4px 16px;color:#475569}
+  #preview img{max-width:100%}
+  #status{color:#b45309;font-size:13px;min-height:18px;margin-top:10px}
+</style>
+</head>
+<body>
+<h1>MarkdownForge</h1>
+<p class="sub">Dependency-free Markdown → HTML with live preview. Everything stays in your browser.</p>
+
+<div class="toolbar">
+  <button id="sample">Load sample</button>
+  <button class="secondary" id="copy">Copy HTML</button>
+  <button class="secondary" id="export">Export .html</button>
+</div>
+
+<div class="cols">
+  <div class="col">
+    <label for="input">Markdown</label>
+    <textarea id="input" spellcheck="false" placeholder="Write or paste Markdown here…"></textarea>
+  </div>
+  <div class="col">
+    <label for="preview">Live preview (HTML)</label>
+    <div id="preview"></div>
+  </div>
+</div>
+
+<div id="status"></div>
+
+<script src="./md-engine.js"></script>
+<script>
+(function () {
+  var input = document.getElementById('input');
+  var preview = document.getElementById('preview');
+  var status = document.getElementById('status');
+
+  var SAMPLE = [
+    '# MarkdownForge',
+    '',
+    'Turn **Markdown** into *HTML* — instantly, in your browser.',
+    '',
+    '## A quick list',
+    '',
+    '- Convert headings, lists and code',
+    '- Ese [links](#) and `inline code`',
+    '- Export or copy the result',
+    '',
+    '> Blockquotes work too.',
+    '',
+    '1. First',
+    '1. Second',
+    '',
+    '```js',
+    'const x = 1;',
+    '```',
+    '',
+    '~~strikethrough~~ and **bold** and *italic*.',
+    ''
+  ].join('\n');
+
+  function render() {
+    var src = input.value;
+    var out = window.MDEngine.mdToHtml(src);
+    preview.innerHTML = out;
+    status.textContent = src.trim() ? (out.length + ' bytes of HTML · ' + src.split('\n').length + ' source lines') : 'Paste Markdown to the left to preview.';
+  }
+
+  input.addEventListener('input', render);
+
+  document.getElementById('sample').addEventListener('click', function () {
+    input.value = SAMPLE; render();
+  });
+
+  document.getElementById('copy').addEventListener('click', function () {
+    navigator.clipboard.writeText(preview.innerHTML).then(function () {
+      status.textContent = 'HTML copied to clipboard.';
+    });
+  });
+
+  document.getElementById('export').addEventListener('click', function () {
+    var name = window.MDEngine.makeFilename(input.value.split('\n')[0].replace(/^#+\s*/, ''));
+    var full = '<!doctype html>\n<html><head><meta charset="utf-8"><title>' + name + '</title></head>\n<body>\n' + preview.innerHTML + '\n</body></html>';
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([full], { type: 'text/html' }));
+    a.download = name + '.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    status.textContent = 'Exported ' + name + '.html';
+  });
+
+  input.value = SAMPLE;
+  render();
+})();
+</script>
+</body>
+</html>
