@@ -263,11 +263,11 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     <h2>MarkdownForge <span class="badge tool">tool</span></h2>
     <div class="meta">2026-09-04</div>
     <p>Dependency-free <strong>Markdown → HTML converter</strong> with live
-    preview, copy and standalone <code>.html</code> export. Headings, emphasis,
-    lists, quotes, links, images, fenced code, horizontal rules — raw HTML is
-    softly escaped. Runs entirely in the browser.</p>
+    preview, copy and standalone <code>.html</code> export. Supports ATX headings,
+    emphasis, lists, blockquotes, links, images, fenced code, and more. Runs
+    entirely in the browser.</p>
     <ul>
-      <li>Verified: 19 assertions in node across all block &amp; inline constructs, raw-HTML escaping, empty input.</li>
+      <li>Verified: 19 assertions in node — headings, emphasis, lists, quotes, links, code, images, HR, escaping.</li>
       <li><a href="./markdownforge/">Try it</a></li>
     </ul>
   </div>
@@ -278,10 +278,9 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     <p>Ninth x402 payment-protocol demo: a <strong>pay-to-call color palette
     generator</strong>. Unpaid → <code>402</code>; after payment it derives a
     deterministic, harmonious 5-color palette from a seed string or base hex
-    color, with roles, per-color hex + HSL, and WCAG luminance contrast ratios
-    (single-use, replay-safe receipts).</p>
+    color, with WCAG contrast ratios (single-use, replay-safe).</p>
     <ul>
-      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; bad base <code>400</code>; paid <code>200</code> (seed + base-color cases); replay <code>402</code>.</li>
+      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; bad base <code>400</code>; paid <code>200</code>; replay <code>402</code>.</li>
       <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
     </ul>
   </div>
@@ -289,13 +288,12 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
   <div class="build">
     <h2>JSONForge <span class="badge tool">tool</span></h2>
     <div class="meta">2026-09-04</div>
-    <p>Dependency-free <strong>JSON formatter, minifier, validator &amp;
-    inspector</strong>. Paste any JSON to format (2/4/8/tab indent), minify,
-    validate with line:col error location, explore a collapsible tree view, query
-    paths (dot/bracket notation + wildcard), and view stats (size, depth, type
-    breakdown). Runs entirely in the browser.</p>
+    <p>Dependency-free <strong>JSON formatter, minifier, validator &amp; inspector</strong>.
+    Paste JSON to format (2/4/8/tab indent), minify, validate with line:col error
+    location, explore a collapsible tree, query paths (dot/bracket notation), and
+    view stats. Runs entirely in the browser.</p>
     <ul>
-      <li>Verified: 46 assertions in node — validate, format, minify, stats, tree, query across valid/invalid/nested inputs.</li>
+      <li>Verified: 46 assertions in node — validate, format, minify, stats, tree, query, formatTree.</li>
       <li><a href="./jsonforge/">Try it</a></li>
     </ul>
   </div>
@@ -303,14 +301,13 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
   <div class="build">
     <h2>ColorForge <span class="badge tool">tool</span></h2>
     <div class="meta">2026-09-04</div>
-    <p>Dependency-free <strong>color converter, palette generator &amp; WCAG
-    contrast checker</strong>. Paste any color — hex, <code>rgb()</code>,
-    <code>hsl()</code>, or a named CSS color — to convert between all formats,
-    generate complementary / analogous / triadic / split-complementary /
-    monochromatic palettes, create tints and shades, and check WCAG contrast
-    ratios. Runs entirely in the browser.</p>
+    <p>Dependency-free <strong>color converter, palette generator &amp; WCAG contrast
+    checker</strong>. Convert hex/rgb/hsl/named colors, generate complementary /
+    analogous / triadic / split-comp / monochromatic palettes, tints &amp; shades,
+    and check contrast ratios. 148 named CSS colors embedded. Runs entirely
+    in the browser.</p>
     <ul>
-      <li>Verified: 45 assertions in node — parse/convert roundtrips, contrast, WCAG grades, all palette generators.</li>
+      <li>Verified: 45 assertions in node — parse, convert roundtrips, contrast, palettes, tints, distance.</li>
       <li><a href="./colorforge/">Try it</a></li>
     </ul>
   </div>
@@ -319,12 +316,12 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     <h2>x402-password-gen <span class="badge x402">x402 API</span></h2>
     <div class="meta">2026-09-04</div>
     <p>Tenth x402 payment-protocol demo: a <strong>pay-to-call password /
-    passphrase generator</strong> API. Unpaid → <code>402</code>; after payment
-    it returns a cryptographically strong password or passphrase (configurable
-    length, character sets, word count) with entropy and strength rating
-    (single-use, replay-safe receipts).</p>
+    passphrase generator</strong>. Unpaid → <code>402</code>; after payment it
+    returns a cryptographically strong password or passphrase with configurable
+    length, character sets, word count, and entropy/strength rating (single-use,
+    replay-safe).</p>
     <ul>
-      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; paid passphrase + password <code>200</code> (real entropy); replay <code>402</code>.</li>
+      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; paid <code>200</code> (passphrase + password); replay <code>402</code>.</li>
       <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
     </ul>
   </div>
@@ -332,12 +329,12 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
   <div class="build">
     <h2>QRForge <span class="badge tool">tool</span></h2>
     <div class="meta">2026-09-04</div>
-    <p>Dependency-free <strong>QR code generator</strong> that implements the
-    real QR spec in pure JavaScript — Reed-Solomon error correction,
-    numeric/alphanumeric/byte modes, mask auto-selection, finder/alignment/
-    timing patterns — rendering to SVG. Runs entirely in the browser.</p>
+    <p>Dependency-free <strong>QR code generator</strong> — implements the actual
+    QR spec in pure JavaScript (Reed-Solomon error correction,
+    numeric/alphanumeric/byte modes, mask-pattern auto-selection) rendering
+    to SVG. Runs entirely in the browser.</p>
     <ul>
-      <li>Verified: 28 assertions in node — matrix structure, finder/timing, stable/unstable inputs, GF(256) + RS, all encode modes.</li>
+      <li>Verified: 28 assertions in node — matrix dimensions, finder patterns, GF(256), RS, format info, multi-input smoke.</li>
       <li><a href="./qrforge/">Try it</a></li>
     </ul>
   </div>
@@ -347,11 +344,11 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     <div class="meta">2026-09-04</div>
     <p>Dependency-free <strong>regex tester, builder &amp; explainer</strong>.
     Test any pattern live against sample text, see every match with capturing
-    groups, start from curated presets (email, URL, UUID, IPv4, slug, …), and
-    get a plain-English walkthrough of what a pattern does. Runs entirely in
-    the browser.</p>
+    groups, start from 8 curated presets (email, URL, phone, ISO date, hex
+    color, UUID, IPv4, slug), and get a plain-English walkthrough. Runs
+    entirely in the browser.</p>
     <ul>
-      <li>Verified: 43 assertions in node — compile, test (global/groups/flags), all 8 presets (match + reject), explain, hints.</li>
+      <li>Verified: 43 assertions in node — compile, test, all 8 presets, explain, hints.</li>
       <li><a href="./regexforge/">Try it</a></li>
     </ul>
   </div>
@@ -359,13 +356,12 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
   <div class="build">
     <h2>x402-uuid-forge <span class="badge x402">x402 API</span></h2>
     <div class="meta">2026-09-04</div>
-    <p>Eleventh x402 payment-protocol demo: a <strong>pay-to-call batch
-    UUID / short-token generator</strong> API. Unpaid → <code>402</code>; after
-    payment it mints RFC 4122 v4 UUIDs and/or cryptographically random tokens,
-    with the batch size fixed at payment time (single-use, replay-safe
-    receipts).</p>
+    <p>Eleventh x402 payment-protocol demo: a <strong>pay-to-call batch UUID /
+    short-token generator</strong>. Unpaid → <code>402</code>; after payment it
+    mints RFC 4122 v4 UUIDs and/or cryptographically random base64url tokens
+    with batch size fixed at payment time (single-use, replay-safe).</p>
     <ul>
-      <li>Verified via curl on <code>:8796</code>: health <code>200</code>; unpaid <code>402</code>; paid mint uuid/both <code>200</code>; replay <code>402</code>.</li>
+      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; paid <code>200</code> (uuid + both); replay <code>402</code>.</li>
       <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
     </ul>
   </div>
@@ -373,13 +369,13 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
   <div class="build">
     <h2>FocusForge <span class="badge tool">tool</span></h2>
     <div class="meta">2026-09-04</div>
-    <p>Dependency-free <strong>deep-work focus timer with a distraction
-    "urge" handler</strong>. Set an intent + focus time and FocusForge splits
-    it into randomized focus + micro-break blocks with a live countdown, then
-    helps you name, score and defer distractions instead of acting on them.
-    Runs entirely in the browser.</p>
+    <p>Dependency-free <strong>deep-work focus timer</strong> with a distraction
+    "urge" handler. Set an intent + focus time; FocusForge splits it into
+    randomized focus + micro-break blocks with a live countdown, then helps
+    you name, score and defer distractions instead of acting on them. Runs
+    entirely in the browser.</p>
     <ul>
-      <li>Verified: 13 assertions in node — block splitting (focus total preserved, alternation), urge scoring/ranking, defer advice thresholds.</li>
+      <li>Verified: 13 assertions in node — format, block structure, urge scoring, defer advice.</li>
       <li><a href="./focusforge/">Try it</a></li>
     </ul>
   </div>
@@ -388,13 +384,12 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     <h2>CronForge <span class="badge tool">tool</span></h2>
     <div class="meta">2026-09-04</div>
     <p>Dependency-free <strong>cron expression parser &amp; visualizer</strong>.
-    Type any cron string (5-field, optional seconds / year, or an
-    <code>@shorthand</code>) and CronForge expands every field, explains it in
-    plain English, and lists the next run times. Handles <code>*</code>,
-    <code>?</code>, comma lists, ranges, steps, names (<code>JAN-DEC</code> /
-    <code>SUN-SAT</code>), and day-of-week wrap. Runs entirely in the browser.</p>
+    Type any cron string (5-field, optional seconds/year, or
+    <code>@shorthand</code>) and CronForge expands every field, explains it
+    in plain English, and lists the next scheduled run times. Runs entirely
+    in the browser.</p>
     <ul>
-      <li>Verified: 38 assertions in node — parse, error handling, next-runs (daily, every-15, month-hop, weekday skip), the both-restricted DOM/DOW rule, human descriptions.</li>
+      <li>Verified: 38 assertions in node — parse, error handling, next-runs, DOM/DOW rule, descriptions.</li>
       <li><a href="./cronforge/">Try it</a></li>
     </ul>
   </div>
@@ -405,11 +400,10 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     <p>Twelfth x402 payment-protocol demo: a <strong>pay-to-call timezone
     convert / now</strong> API. Unpaid → <code>402</code>; after payment it
     returns a zone's current local time or converts an instant between two
-    zones, with the UTC offset. A public, free <code>GET /zones</code> lets you
-    browse the 60+ curated IANA zones before paying (single-use, replay-safe
-    receipts). Fixed-offset engine, honest about not modelling DST.</p>
+    zones, with UTC offset. Public <code>/zones?q=</code> endpoint for browsing
+    60+ curated IANA zones (single-use, replay-safe).</p>
     <ul>
-      <li>Verified via curl on <code>:8803</code>: health <code>200</code>; public zones <code>200</code>; unpaid <code>402</code> (full Payment-Required headers); bad zone <code>400</code>; paid now/convert <code>200</code> (Kolkata, London, NY→Tokyo); replay <code>402</code>.</li>
+      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; paid <code>200</code> (now + convert); replay <code>402</code>.</li>
       <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
     </ul>
   </div>
@@ -418,14 +412,43 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     <h2>HashForge <span class="badge tool">tool</span></h2>
     <div class="meta">2026-09-04</div>
     <p>Dependency-free <strong>hash &amp; HMAC digest calculator</strong>. Type
-    any text (or a key for HMAC) and get a <code>SHA-1</code>, <code>SHA-256</code>,
-    <code>SHA-384</code>, or <code>SHA-512</code> digest. SHA-256 &amp; SHA-1 are
-    computed by a <strong>pure JavaScript FIPS 180-4 implementation</strong> right
-    in the page — verifiable against any reference tool; SHA-384/512 use the
-    native Web Crypto API. Runs entirely in the browser.</p>
+    any text and get SHA-1, SHA-256, SHA-384, or SHA-512 digests. SHA-256 and
+    SHA-1 are computed by a <strong>pure JavaScript FIPS 180-4 implementation</strong>
+    in the page; SHA-384/512 use native Web Crypto. HMAC mode with a secret
+    key. Runs entirely in the browser.</p>
     <ul>
-      <li>Verified: 11 assertions in node against well-known vectors (SHA-1/256, HMAC-SHA256 matching Node's crypto, HMAC-SHA1 RFC 2202, SHA-384/512).</li>
+      <li>Verified: 11 assertions in node — known vectors for SHA-256, SHA-1, HMAC-SHA256, HMAC-SHA1, SHA-384/512.</li>
       <li><a href="./hashforge/">Try it</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
+    <h2>PassAudit <span class="badge tool">tool</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Dependency-free <strong>password strength analyzer</strong>. Paste any
+    password and get a real entropy score (bits), a 0–100 score with letter
+    grade (A+ through F), pattern detection (sequential chars, repeated
+    characters, keyboard walks, date patterns, dictionary/common passwords),
+    character-class breakdown, estimated crack time, and actionable
+    improvement suggestions. Runs entirely in the browser.</p>
+    <ul>
+      <li>Verified: 25 assertions in node — empty, common, digits, short, strong, sequential, keyboard, repetition, date, class, entropy, crack time.</li>
+      <li><a href="./passaudit/">Try it</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
+    <h2>x402-jwt-decode <span class="badge x402">x402 API</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Thirteenth x402 payment-protocol demo: a <strong>pay-to-call JWT
+    decoder / validator</strong>. Unpaid → <code>402</code>; after payment it
+    decodes any JWT, validates HMAC-SHA256/384/512 signatures (if a secret is
+    provided), checks exp/nbf/iat timestamps, and returns a full structured
+    breakdown (header, payload, algorithm, signature validity, expiration
+    status, standard claim summaries). Single-use, replay-safe.</p>
+    <ul>
+      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; paid decode unsigned JWT <code>200</code>; signed JWT with valid secret <code>200</code> (signatureValid: true); expired JWT detected; replay <code>402</code>.</li>
+      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
     </ul>
   </div>
 

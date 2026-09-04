@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PassAudit — password strength analyzer</title>
+<meta name="description" content="Dependency-free password strength analyzer. Check entropy, detect patterns, get improvement tips — pure JavaScript, runs entirely in the browser.">
+<style>
+  :root{--fg:#1a1a1a;--muted:#64748b;--line:#e2e8f0;--accent:#7c3aed;--ok:#065f46;--warn:#92400e;--err:#b91c1c;--bg:#f8fafc;--crit:#dc2626;--high:#ea580c;--med:#ca8a04}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:820px;margin:0 auto;padding:24px 20px 60px;color:var(--fg);line-height:1.6}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 18px;font-size:14px}
+  input[type=text],textarea{width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:ui-monospace,Menlo,monospace}
+  textarea{min-height:60px;resize:vertical}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  .btn{padding:9px 16px;border:1px solid var(--line);border-radius:8px;font-size:14px;cursor:pointer;font-weight:600;background:#fff}
+  .btn.primary{background:var(--accent);color:#fff;border:0}
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+  .card h2{margin:0 0 10px;font-size:16px}
+  .meta{color:var(--muted);font-size:13px;margin:4px 0}
+  .score-ring{width:120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;margin:10px auto;position:relative}
+  .score-ring .num{font-size:36px;font-weight:700;line-height:1}
+  .score-ring .lbl{font-size:12px;color:var(--muted);margin-top:2px}
+  .grade{font-size:42px;font-weight:800;text-align:center;margin:4px 0}
+  .grade.a-plus,.grade.a{color:var(--ok)}
+  .grade.b{color:#0369a1}
+  .grade.c{color:var(--med)}
+  .grade.d{color:var(--warn)}
+  .grade.f{color:var(--err)}
+  .bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:6px 0}
+  .bar-fill{height:100%;border-radius:4px;transition:width .3s}
+  .issue{padding:6px 10px;border-radius:6px;margin:4px 0;font-size:13px;border-left:3px solid var(--line)}
+  .issue.critical{border-color:var(--crit);background:#fef2f2}
+  .issue.high{border-color:var(--high);background:#fff7ed}
+  .issue.medium{border-color:var(--med);background:#fefce8}
+  .issue.low{border-color:var(--line);background:#f8fafc}
+  .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}
+  .details-grid .dt{color:var(--muted)}
+  .suggestion{padding:6px 10px;border-radius:6px;margin:4px 0;font-size:13px;background:#f0fdf4;border-left:3px solid var(--ok);color:var(--ok)}
+  .crack{font-size:13px;color:var(--muted);margin:6px 0}
+  .crack strong{color:var(--fg);font-size:15px}
+  .hidden{display:none}
+  .copy-ok{color:var(--ok);font-size:13px;font-weight:600;margin-left:8px}
+</style>
+</head>
+<body>
+<h1>PassAudit</h1>
+<p class="sub">Dependency-free <strong>password strength analyzer</strong>.
+Paste any password and get a real entropy score, pattern detection (sequential,
+repeated, keyboard walk, date, dictionary), character-class breakdown, and
+actionable improvement tips — pure JavaScript, runs entirely in the browser.</p>
+
+<div class="label" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Enter password to analyze</div>
+<textarea id="input" placeholder="Type or paste a password to audit..."
+  spellcheck="false" autocomplete="off" style="min-height:44px"></textarea>
+
+<div class="row">
+  <button class="btn primary" onclick="analyze()">Analyze</button>
+  <button class="btn" onclick="generate()">Generate Strong</button>
+  <span class="copy-ok" id="status" style="display:none"></span>
+</div>
+
+<div id="result" class="hidden">
+  <div class="card" style="text-align:center">
+    <div class="grade" id="grade">F</div>
+    <div class="score-ring">
+      <div class="num" id="scoreNum">0</div>
+      <div class="lbl">/ 100</div>
+    </div>
+    <div class="bar" style="max-width:240px;margin:8px auto"><div class="bar-fill" id="barFill" style="width:0%;background:var(--err)"></div></div>
+    <div class="meta">Entropy: <strong id="entropy">0</strong> bits &middot; Length: <strong id="length">0</strong></div>
+    <div class="crack">Estimated crack time: <strong id="crackTime">—</strong></div>
+  </div>
+
+  <div class="card">
+    <h2>Issues</h2>
+    <div id="issues"><div class="meta">No issues found — great password!</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Suggestions</h2>
+    <div id="suggestions"><div class="meta">No suggestions needed.</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Details</h2>
+    <div class="details-grid" id="details"></div>
+  </div>
+</div>
+
+<script src="pass-audit-engine.js"></script>
+<script>
+function analyze() {
+  const pwd = document.getElementById('input').value;
+  const r = PassAudit.score(pwd);
+  const ct = PassAudit.crackTime(pwd);
+
+  document.getElementById('result').classList.remove('hidden');
+  document.getElementById('scoreNum').textContent = r.score;
+  document.getElementById('entropy').textContent = r.entropy;
+  document.getElementById('length').textContent = r.details.length;
+  document.getElementById('crackTime').textContent = ct;
+
+  // Grade
+  const ge = document.getElementById('grade');
+  ge.textContent = r.grade;
+  ge.className = 'grade ' + (r.grade === 'A+' ? 'a-plus' : r.grade.toLowerCase());
+
+  // Bar
+  const bf = document.getElementById('barFill');
+  bf.style.width = r.score + '%';
+  bf.style.background = r.score >= 80 ? 'var(--ok)' : r.score >= 60 ? '#0369a1' : r.score >= 40 ? 'var(--med)' : 'var(--err)';
+
+  // Issues
+  const ie = document.getElementById('issues');
+  if (r.issues.length === 0) {
+    ie.innerHTML = '<div class="meta">No issues found — great password!</div>';
+  } else {
+    ie.innerHTML = r.issues.map(i =>
+      `<div class="issue ${i.severity}"><strong>${i.severity.toUpperCase()}</strong> — ${i.msg}</div>`
+    ).join('');
+  }
+
+  // Suggestions
+  const se = document.getElementById('suggestions');
+  if (r.suggestions.length === 0) {
+    se.innerHTML = '<div class="meta">No suggestions needed.</div>';
+  } else {
+    se.innerHTML = r.suggestions.map(s =>
+      `<div class="suggestion">✓ ${s}</div>`
+    ).join('');
+  }
+
+  // Details
+  const d = r.details;
+  const cd = d.classes;
+  document.getElementById('details').innerHTML = [
+    ['Length', d.length],
+    ['Character classes', d.classCount + '/4'],
+    ['Lowercase', cd.lower || '—'],
+    ['Uppercase', cd.upper || '—'],
+    ['Digits', cd.digit || '—'],
+    ['Symbols', cd.symbol || '—'],
+    ['Repetition', d.repeatedRatio],
+    ['Sequential', d.sequential ? 'Yes' : 'No'],
+    ['Keyboard walk', d.keyboardWalk ? 'Yes' : 'No'],
+    ['Date pattern', d.datePattern ? 'Yes' : 'No'],
+    ['Dictionary', d.commonPassword ? 'YES' : 'No'],
+  ].map(([k, v]) => `<div><span class="dt">${k}:</span> <strong>${v}</strong></div>`).join('');
+}
+
+function generate() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:,.<>?';
+  let pw = '';
+  const arr = new Uint32Array(20);
+  crypto.getRandomValues(arr);
+  for (let i = 0; i < 20; i++) pw += chars[arr[i] % chars.length];
+  document.getElementById('input').value = pw;
+  analyze();
+}
+
+document.getElementById('input').addEventListener('input', analyze);
+</script>
+</body>
+</html>
