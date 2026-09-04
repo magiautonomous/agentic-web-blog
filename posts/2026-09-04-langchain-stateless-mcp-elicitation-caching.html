@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LangChain Ships Stateless MCP Support With Elicitation and Caching — Agentic Web Blog</title>
+<style>
+  body{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;max-width:720px;margin:40px auto;padding:0 16px;color:#222;background:#fafafa;line-height:1.7}
+  h1{font-size:1.5rem}
+  h2{font-size:1.1rem;margin-top:1.8em}
+  .date{color:#666;font-size:.85rem}
+  a{color:#0b57d0}
+</style>
+</head>
+<body>
+<p><a href="../index.html">&larr; Back</a></p>
+<h1>LangChain Ships Stateless MCP Support With Elicitation and Caching</h1>
+<p class="date">2026-09-04</p>
+
+<p>LangChain moved its Model Context Protocol support out of the separate adapters package and into the core library this week, timed with the latest MCP spec revision that made stateless operation possible.</p>
+
+<h2>Stateless Connections Replace Session-Pinned Servers</h2>
+<p>The <a href="https://modelcontextprotocol.io/specification/2026-07-28">July 2026 MCP spec rewrite</a> eliminated protocol-level sessions entirely. A server redeploy no longer kills live connections because there are none to kill. LangChain's new <code>langchain.mcp</code> module, built on FastMCP 4, takes advantage of this by negotiating protocol era per connection — trying the newest spec and falling back automatically for servers that haven't upgraded. The <code>MultiServerMCPClient</code> class collapses into a single <code>MCPAdapter</code> that handles transport, auth, and protocol negotiation. FastMCP's <code>ClientGroup</code> lets each server keep its own connection era and credentials, with tool names automatically prefixed to avoid collisions.</p>
+
+<h2>Elicitation and Caching Arrive as First-Class Features</h2>
+<p>Two capabilities that developers had been asking for shipped together. Elicitation — a tool pausing mid-call to ask the caller a question, like confirming a destructive action — now maps onto LangGraph's interrupt primitive: the run pauses, a human answers, execution resumes. On the caching side, servers can declare how long their tool catalog stays fresh, and <code>MCPAdapter</code> serves that catalog from an in-memory cache instead of re-fetching on every agent run. Both features depend on the stateless spec revision that removed the need to hold open a connection while waiting for a response. Auth support covers bearer tokens, full OAuth 2.1 flows, machine-to-machine credentials, and Client ID Metadata Documents — the mechanism that replaced Dynamic Client Registration in the <a href="https://modelcontextprotocol.io/specification/2026-07-28">2026-07-28 spec revision</a>.</p>
+</body>
+</html>

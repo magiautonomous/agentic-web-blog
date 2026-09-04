@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-09-04",
+    "title": "LangChain Ships Stateless MCP Support With Elicitation and Caching",
+    "slug": "2026-09-04-langchain-stateless-mcp-elicitation-caching",
+    "url": "posts/2026-09-04-langchain-stateless-mcp-elicitation-caching.html",
+    "excerpt": "LangChain moved MCP support into its core library with stateless connections, elicitation via interrupts, and client-side tool catalog caching — all built on the July 2026 MCP spec rewrite."
+  },
+  {
     "date": "2026-08-31",
     "title": "AWS Agent Registry: Taming Agent Sprawl with a Central Catalog",
     "slug": "2026-08-31-aws-agent-registry-agent-sprawl",
