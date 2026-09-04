@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ColorForge — color picker, converter & palette generator</title>
+<meta name="description" content="Dependency-free color converter, palette generator, and WCAG contrast checker. Hex, RGB, HSL, named CSS colors — all in the browser.">
+<style>
+  :root{--fg:#1a1a1a;--muted:#64748b;--line:#e2e8f0;--accent:#dc2626;--ok:#065f46;--warn:#92400e;--err:#b91c1c;--bg:#f8fafc}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:860px;margin:0 auto;padding:24px 20px 60px;color:var(--fg);line-height:1.6}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 20px;font-size:14px}
+  input[type=text],input[type=color]{padding:10px 14px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:ui-monospace,Menlo,monospace}
+  input[type=text]{width:260px}
+  input[type=color]{width:52px;height:40px;padding:2px;cursor:pointer}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  button{padding:9px 16px;border:1px solid var(--line);border-radius:8px;font-size:14px;cursor:pointer;font-weight:600}
+  button.primary{background:var(--accent);color:#fff;border:0}
+  button.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .swatch-big{width:100%;height:80px;border:1px solid var(--line);border-radius:10px;margin:14px 0}
+  .formats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+  .fmt-item{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 12px;font-family:ui-monospace,Menlo,monospace;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+  .fmt-item:hover{border-color:var(--accent)}
+  .fmt-label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  .tabs{display:flex;gap:0;margin:20px 0 0;border-bottom:2px solid var(--line)}
+  .tabs button{border:0;background:none;padding:10px 16px;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer}
+  .tabs button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+  .panel{display:none;padding:14px 0 0}
+  .panel.active{display:block}
+  .palette-row{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
+  .pal-swatch{width:60px;height:48px;border-radius:8px;border:1px solid var(--line);cursor:pointer;position:relative;display:flex;align-items:end;justify-content:center;padding-bottom:3px}
+  .pal-swatch span{font-size:10px;font-family:monospace;background:rgba(255,255,255,.85);padding:1px 4px;border-radius:3px;color:#000}
+  .pal-swatch.tall{width:100%;height:36px}
+  .contrast-card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:10px 0}
+  .contrast-card h3{margin:0 0 8px;font-size:15px}
+  .ratio{font-size:28px;font-weight:700}
+  .grade-badge{display:inline-block;padding:3px 12px;border-radius:8px;color:#fff;font-weight:600;font-size:14px;margin-left:10px}
+  .gAAA{background:#059669}.gAA{background:#0891b2}.gL{background:#d97706}.gF{background:#b91c1c}
+  .preview-box{border-radius:8px;padding:12px;margin:10px 0;font-size:14px}
+  .ts-row{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}
+  .ts-swatch{width:48px;height:32px;border-radius:6px;border:1px solid var(--line)}
+  .err-msg{color:var(--err);font-size:14px;font-weight:600;margin:8px 0}
+  .copy-ok{color:var(--ok);font-size:13px;font-weight:600;margin-left:8px}
+</style>
+</head>
+<body>
+<h1>ColorForge</h1>
+<p class="sub">Dependency-free <strong>color converter, palette generator &amp;
+WCAG contrast checker</strong>. Paste any color (hex, <code>rgb()</code>,
+<code>hsl()</code>, or a named CSS color) to convert, generate palettes, and
+check contrast ratios. Runs entirely in the browser.</p>
+
+<div class="row">
+  <input type="color" id="picker" value="#ff8800">
+  <input type="text" id="input" value="#ff8800" placeholder="hex, rgb(), hsl(), or name">
+  <button class="primary" onclick="doConvert()">Convert</button>
+  <button onclick="doRandom()">Random</button>
+  <button class="secondary" onclick="doCopy()">Copy</button>
+  <span class="copy-ok" id="status" style="display:none"></span>
+</div>
+
+<div class="swatch-big" id="swatch" style="background:#ff8800"></div>
+
+<div class="formats" id="formats"></div>
+
+<div class="tabs">
+  <button class="active" onclick="showTab('palettes')">Palettes</button>
+  <button onclick="showTab('contrast')">Contrast</button>
+  <button onclick="showTab('tints')">Tints &amp; Shades</button>
+</div>
+
+<div class="panel active" id="panel-palettes">
+  <div id="palettesOut"></div>
+</div>
+
+<div class="panel" id="panel-contrast">
+  <div class="contrast-card">
+    <h3>WCAG Contrast Checker</h3>
+    <div class="row">
+      <label>Foreground <input type="text" id="fg" value="#000000" style="width:120px"></label>
+      <label>Background <input type="text" id="bg" value="#ffffff" style="width:120px"></label>
+      <button class="primary" onclick="doContrast()">Check</button>
+    </div>
+    <div id="contrastOut"></div>
+    <div id="contrastPreview"></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-tints">
+  <div id="tintsOut"></div>
+</div>
+
+<div id="error" style="display:none"></div>
+
+<script src="color-engine.js"></script>
+<script>
+const $input = document.getElementById('input');
+const $picker = document.getElementById('picker');
+const $swatch = document.getElementById('swatch');
+const $formats = document.getElementById('formats');
+const $err = document.getElementById('error');
+const $status = document.getElementById('status');
+let lastOutput = '';
+
+$picker.addEventListener('input', () => { $input.value = $picker.value; doConvert(); });
+$input.addEventListener('keydown', e => { if (e.key === 'Enter') doConvert(); });
+
+function showTab(name) {
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(name.slice(0,4))));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+function flash(msg) { $status.textContent = msg; $status.style.display = 'inline'; setTimeout(() => $status.style.display = 'none', 2000); }
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function showErr(m) { $err.innerHTML = '<span class="err-msg">' + esc(m) + '</span>'; $err.style.display = 'block'; }
+function hideErr() { $err.style.display = 'none'; }
+
+function doConvert() {
+  hideErr();
+  const r = ColorEngine.convert($input.value);
+  if (!r) { showErr('Could not parse color: ' + $input.value); return; }
+  $swatch.style.background = r.hex;
+  $picker.value = r.hex;
+  lastOutput = r.hex;
+  $formats.innerHTML = [
+    ['HEX', r.hex], ['RGB', r.rgb], ['HSL', r.hsl],
+    ['R,G,B', r.r + ', ' + r.g + ', ' + r.b]
+  ].map(([l, v]) => '<div class="fmt-item" onclick="copyText(\'' + esc(v) + '\')"><span class="fmt-label">' + l + '</span><span>' + esc(v) + '</span></div>').join('');
+  renderPalettes(r.hex);
+  renderTints(r.hex);
+}
+
+function renderPalettes(hex) {
+  const palettes = [
+    ['Complementary', ColorEngine.complementary(hex)],
+    ['Analogous', ColorEngine.analogous(hex)],
+    ['Triadic', ColorEngine.triadic(hex)],
+    ['Split-Complementary', ColorEngine.splitComplementary(hex)],
+    ['Monochromatic (7)', ColorEngine.monochromatic(hex, 7)]
+  ];
+  document.getElementById('palettesOut').innerHTML = palettes.map(([name, colors]) =>
+    '<h3 style="margin:14px 0 6px;font-size:14px">' + name + '</h3>' +
+    '<div class="palette-row">' + colors.map(c =>
+      '<div class="pal-swatch" style="background:' + c + '" onclick="copyText(\'' + c + '\')" title="' + c + '"><span>' + c + '</span></div>'
+    ).join('') + '</div>'
+  ).join('');
+}
+
+function renderTints(hex) {
+  const ts = ColorEngine.tintsAndShades(hex, 7);
+  document.getElementById('tintsOut').innerHTML =
+    '<h3 style="margin:14px 0 6px;font-size:14px">Tints (lighter)</h3>' +
+    '<div class="ts-row">' + ts.tints.map(c => '<div class="ts-swatch" style="background:' + c + '" title="' + c + '"></div>').join('') + '</div>' +
+    '<h3 style="margin:14px 0 6px;font-size:14px">Shades (darker)</h3>' +
+    '<div class="ts-row">' + ts.shades.map(c => '<div class="ts-swatch" style="background:' + c + '" title="' + c + '"></div>').join('') + '</div>';
+}
+
+function doContrast() {
+  hideErr();
+  const fg = document.getElementById('fg').value;
+  const bg = document.getElementById('bg').value;
+  const ratio = ColorEngine.contrastRatio(fg, bg);
+  if (ratio === null) { showErr('Could not parse one or both colors'); return; }
+  const grade = ColorEngine.wcagGrade(ratio);
+  const gc = { AAA: 'gAAA', AA: 'gAA', 'AA Large': 'gL', Fail: 'gF' }[grade] || 'gF';
+  document.getElementById('contrastOut').innerHTML =
+    '<div style="margin-top:12px"><span class="ratio">' + ratio + ':1</span><span class="grade-badge ' + gc + '">' + grade + '</span></div>' +
+    '<p style="color:var(--muted);font-size:13px;margin:6px 0">' +
+      (ratio >= 7 ? 'Excellent contrast — passes all WCAG levels.' :
+       ratio >= 4.5 ? 'Good contrast — passes WCAG AA for normal text.' :
+       ratio >= 3 ? 'Moderate contrast — passes AA for large text only.' :
+       'Poor contrast — fails WCAG guidelines.') + '</p>';
+  document.getElementById('contrastPreview').innerHTML =
+    '<div class="preview-box" style="background:' + bg + ';color:' + fg + '">Preview: The quick brown fox jumps over the lazy dog.</div>';
+}
+
+function doRandom() {
+  const h = Math.floor(Math.random() * 360);
+  const s = 50 + Math.floor(Math.random() * 50);
+  const l = 30 + Math.floor(Math.random() * 40);
+  const rgb = ColorEngine.hslToRgb(h, s / 100, l / 100);
+  const hex = ColorEngine.toHex(rgb.r, rgb.g, rgb.b);
+  $input.value = hex; doConvert();
+}
+
+function doCopy() { if (lastOutput) navigator.clipboard.writeText(lastOutput).then(() => flash('Copied!')); }
+function copyText(t) { navigator.clipboard.writeText(t).then(() => flash('Copied ' + t)); }
+
+doConvert();
+</script>
+</body>
+</html>
