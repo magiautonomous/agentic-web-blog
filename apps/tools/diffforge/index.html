@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DiffForge — Text Diff &amp; Compare</title>
+<meta name="description" content="Dependency-free text diff tool: line diff, unified diff, side-by-side, inline char diff.">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:900px;margin:0 auto;padding:20px;color:#1a1a1a;line-height:1.6;background:#f8fafc}
+  h1{font-size:28px}
+  .sub{color:#64748b;font-size:14px;margin:4px 0 20px}
+  .panel{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin-bottom:16px}
+  .panel h2{font-size:17px;margin-bottom:8px;color:#1e293b}
+  label{display:block;font-size:13px;font-weight:600;margin-bottom:4px;color:#475569}
+  .inputs{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  textarea{width:100%;font-family:'SF Mono',Consolas,monospace;font-size:13px;border:1px solid #d1d5db;border-radius:6px;padding:10px;min-height:220px;resize:vertical;background:#fafbfc}
+  .bar{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap;align-items:center}
+  button{background:#2563eb;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:14px;cursor:pointer}
+  button:hover{background:#1d4ed8}
+  button.ghost{background:#fff;color:#334155;border:1px solid #d1d5db}
+  button.ghost:hover{background:#f1f5f9}
+  .stats{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;font-weight:600;margin:10px 0}
+  .stat{display:inline-block;padding:4px 12px;border-radius:6px}
+  .stat.add{background:#dcfce7;color:#166534}
+  .stat.del{background:#fee2e2;color:#991b1b}
+  .stat.mod{background:#fef3c7;color:#92400e}
+  .stat.same{background:#e2e8f0;color:#334155}
+  .mode-tab{display:inline-block;padding:6px 14px;border:1px solid #d1d5db;border-radius:6px 0 0 6px;font-size:13px;cursor:pointer;background:#fff;color:#475569}
+  .mode-tab.active{background:#2563eb;color:#fff;border-color:#2563eb}
+  .mode-tab+.mode-tab{border-radius:0 6px 6px 0;border-left:0}
+  .out{background:#0f172a;border-radius:8px;padding:14px;font-family:'SF Mono',Consolas,monospace;font-size:13px;overflow-x:auto;line-height:1.5;max-height:460px;overflow-y:auto}
+  .out table{border-collapse:collapse;width:100%;font-size:13px}
+  .out td{padding:2px 8px;vertical-align:top;white-space:pre;font-family:'SF Mono',Consolas,monospace}
+  td.lineno{color:#64748b;text-align:right;border-right:1px solid #334155;user-select:none}
+  td.eq{color:#e2e8f0}
+  td.del{background:rgba(239,68,68,0.18);color:#fecaca}
+  td.add{background:rgba(34,197,94,0.18);color:#bbf7d0}
+  tr.eq:hover{background:rgba(255,255,255,0.03)}
+  .uni{color:#e2e8f0;white-space:pre-wrap;word-break:break-all}
+  .uni .h{color:#7dd3fc;font-weight:700}
+  .uni .del{color:#fca5a5}
+  .uni .add{color:#86efac}
+  .uni .con{color:#94a3b8}
+  .empty{color:#94a3b8;font-style:italic}
+  .footer{color:#94a3b8;font-size:12px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+<h1>DiffForge</h1>
+<div class="sub">Text diff &amp; compare · line diff, unified diff, side-by-side · runs in your browser</div>
+
+<div class="panel">
+  <h2>Compare two texts</h2>
+  <div class="inputs">
+    <div>
+      <label>Text A (original)</label>
+      <textarea id="a" placeholder="Original text…">def greet(name):
+    return "hi " + name
+
+print(greet("alice"))</textarea>
+    </div>
+    <div>
+      <label>Text B (modified)</label>
+      <textarea id="b" placeholder="Modified text…">def greet(name):
+    return "hello " + name
+
+
+print(greet("bob"))</textarea>
+    </div>
+  </div>
+
+  <div class="bar">
+    <span class="mode-tab active" id="tab-unified" onclick="setMode('unified')">Unified</span>
+    <span class="mode-tab" id="tab-side" onclick="setMode('side')">Side-by-side</span>
+    <button onclick="runDiff()">Diff</button>
+    <button class="ghost" onclick="sample()">Sample</button>
+    <button class="ghost" onclick="clearAll()">Clear</button>
+  </div>
+
+  <div class="stats" id="stats"></div>
+</div>
+
+<div class="out" id="out"><span class="empty">Enter two texts and click Diff.</span></div>
+
+<hr>
+<div class="footer">Built by Casper (CASPER-X402 mission). Pure JS, no dependencies.</div>
+
+<script src="diff-engine.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const DE = DiffEngine;
+let mode = 'unified';
+
+function setMode(m) {
+  mode = m;
+  $('tab-unified').classList.toggle('active', m === 'unified');
+  $('tab-side').classList.toggle('active', m === 'side');
+  runDiff();
+}
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function runDiff() {
+  const a = $('a').value;
+  const b = $('b').value;
+  const s = DE.summary(a, b);
+  $('stats').innerHTML =
+    '<span class="stat add">+' + s.addedLines + ' added</span>' +
+    '<span class="stat del">−' + s.removedLines + ' removed</span>' +
+    '<span class="stat mod">' + s.changedLines + ' changed</span>' +
+    '<span class="stat same">' + s.unchangedLines + ' unchanged</span>' +
+    '<span class="stat same">' + s.similar + '% similar</span>';
+  if (mode === 'unified') renderUnified(a, b);
+  else renderSide(a, b);
+}
+
+function renderUnified(a, b) {
+  const u = DE.toUnified(a, b);
+  const el = $('out');
+  el.innerHTML = '';
+  el.className = 'out';
+  if (u === '(no differences)') { el.innerHTML = '<span class="empty">&nbsp;(no differences)</span>'; return; }
+  const div = document.createElement('div');
+  div.className = 'uni';
+  div.textContent = u;
+  // colorize
+  div.innerHTML = esc(u).split('\n').map(line => {
+    if (line.startsWith('@@')) return '<span class="h">' + esc(line) + '</span>';
+    if (line.startsWith('-')) return '<span class="del">' + esc(line) + '</span>';
+    if (line.startsWith('+')) return '<span class="add">' + esc(line) + '</span>';
+    if (line.startsWith('---') || line.startsWith('+++')) return '<span class="h">' + esc(line) + '</span>';
+    return '<span class="con">' + esc(line) + '</span>';
+  }).join('\n');
+  el.appendChild(div);
+}
+
+function renderSide(a, b) {
+  const rows = DE.toSideBySide(a, b);
+  const el = $('out');
+  el.innerHTML = '<table><colgroup><col style="width:40px"><col><col style="width:40px"><col></colgroup><tbody></tbody></table>';
+  el.className = 'out';
+  const tbody = el.querySelector('tbody');
+  for (const r of rows) {
+    const tr = document.createElement('tr');
+    if (r.type === 'equal') {
+      tr.className = 'eq';
+      const td1 = document.createElement('td'); td1.className = 'lineno'; td1.textContent = (r.aLine + 1);
+      const td2 = document.createElement('td'); td2.className = 'eq'; td2.textContent = r.a === null ? ' ' : r.a;
+      const td3 = document.createElement('td'); td3.className = 'lineno'; td3.textContent = (r.bLine + 1);
+      const td4 = document.createElement('td'); td4.className = 'eq'; td4.textContent = r.b === null ? ' ' : r.b;
+      tr.append(td1, td2, td3, td4);
+    } else if (r.type === 'mod') {
+      const td1 = document.createElement('td'); td1.className = 'lineno'; td1.textContent = (r.aLine + 1);
+      const td2 = document.createElement('td'); td2.className = 'del'; td2.textContent = r.a;
+      const td3 = document.createElement('td'); td3.className = 'lineno'; td3.textContent = (r.bLine + 1);
+      const td4 = document.createElement('td'); td4.className = 'add'; td4.textContent = r.b;
+      tr.append(td1, td2, td3, td4);
+    } else if (r.type === 'del') {
+      const td1 = document.createElement('td'); td1.className = 'lineno'; td1.textContent = (r.aLine + 1);
+      const td2 = document.createElement('td'); td2.className = 'del'; td2.textContent = r.a;
+      const td3 = document.createElement('td'); td3.className = 'lineno';
+      const td4 = document.createElement('td'); td4.className = 'eq';
+      tr.append(td1, td2, td3, td4);
+    } else if (r.type === 'add') {
+      const td1 = document.createElement('td'); td1.className = 'lineno';
+      const td2 = document.createElement('td'); td2.className = 'eq';
+      const td3 = document.createElement('td'); td3.className = 'lineno'; td3.textContent = (r.bLine + 1);
+      const td4 = document.createElement('td'); td4.className = 'add'; td4.textContent = r.b;
+      tr.append(td1, td2, td3, td4);
+    }
+    tbody.appendChild(tr);
+  }
+  if (rows.length === 0) el.innerHTML = '<span class="empty">(no differences)</span>';
+}
+
+function sample() {
+  $('a').value = 'def greet(name):\n    return "hi " + name\n\nprint(greet("alice"))';
+  $('b').value = 'def greet(name):\n    return "hello " + name\n\n\nprint(greet("bob"))';
+  runDiff();
+}
+
+function clearAll() {
+  $('a').value = '';
+  $('b').value = '';
+  $('stats').innerHTML = '';
+  $('out').innerHTML = '<span class="empty">Enter two texts and click Diff.</span>';
+  $('out').className = 'out';
+}
+
+$('a').addEventListener('input', runDiff);
+$('b').addEventListener('input', runDiff);
+runDiff();
+</script>
+</body>
+</html>
