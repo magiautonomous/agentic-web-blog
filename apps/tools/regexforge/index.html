@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RegexForge — test, build & understand regular expressions</title>
+<meta name="description" content="Dependency-free regex tester, builder, and explainer. Test patterns live against sample text, see all matches with groups, start from curated presets, and get a plain-English walkthrough of any pattern.">
+<style>
+  :root{--fg:#1a1a1a;--muted:#64748b;--line:#e2e8f0;--accent:#0369a1;--ok:#065f46;--warn:#92400e;--err:#b91c1c;--bg:#f8fafc}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:880px;margin:0 auto;padding:24px 20px 60px;color:var(--fg);line-height:1.6}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 20px;font-size:14px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  label{font-size:14px}
+  input[type=text],input[type=checkbox],select,textarea{padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:ui-monospace,Menlo,monospace}
+  input[type=text]{flex:1}
+  textarea{width:100%;min-height:90px;resize:vertical}
+  select{font-family:inherit}
+  button{padding:9px 16px;border:1px solid var(--line);border-radius:8px;font-size:14px;cursor:pointer;font-weight:600}
+  button.primary{background:var(--accent);color:#fff;border:0}
+  button.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .chk{display:flex;gap:14px;align-items:center;font-size:13px;flex-wrap:wrap}
+  .chk label{display:flex;gap:4px;align-items:center}
+  .card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--bg);margin-top:16px}
+  .card h3{margin:0 0 8px;font-size:15px;border-bottom:1px solid var(--line);padding-bottom:5px}
+  .count{font-size:14px;font-weight:600}
+  .ok-color{color:var(--ok)} .err-color{color:var(--err)}
+  #matches{font-family:ui-monospace,Menlo,monospace;font-size:13px}
+  .mtch{background:#ffe4e6;border:1px solid #fecdd3;border-radius:6px;padding:6px 10px;margin:6px 0;word-break:break-all}
+  .mtch .idx{color:var(--muted);font-size:12px}
+  #testText mark{background:#fde68a;border-radius:2px;padding:0 1px}
+  .step{display:flex;gap:10px;align-items:baseline;font-size:13px;margin:4px 0}
+  .step .tok{font-family:ui-monospace,Menlo,monospace;background:#f1f5f9;border:1px solid var(--line);border-radius:4px;padding:1px 6px;min-width:24px}
+  .step .des{color:var(--fg)}
+  .summary{color:var(--accent);font-weight:600;font-size:14px;margin-bottom:8px}
+  .hint{color:var(--warn);font-size:13px;margin:4px 0}
+  .preset{display:inline-block;padding:6px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;margin:4px 6px 0 0;cursor:pointer;background:#fff}
+  .preset:hover{border-color:var(--accent);color:var(--accent)}
+  .err-msg{color:var(--err);font-size:14px;font-weight:600;margin:8px 0}
+  code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<h1>RegexForge</h1>
+<p class="sub">Dependency-free <strong>regex tester, builder &amp; explainer</strong>.
+Test any pattern live against sample text, see every match with capturing groups,
+start from curated presets, and get a plain-English walkthrough of what a pattern
+does. Runs entirely in the browser.</p>
+
+<div class="card">
+  <h3>Pattern &amp; Flags</h3>
+  <div class="row">
+    <label>Regex</label>
+    <input type="text" id="pattern" value="\b(\w{2,})-\1\b" placeholder="e.g. ^\d{4}-\d{2}-\d{2}$ or /pattern/gi">
+  </div>
+  <div class="chk">
+    <label><input type="checkbox" id="fg"> Global (g)</label>
+    <label><input type="checkbox" id="fi"> Ignore case (i)</label>
+    <label><input type="checkbox" id="fm"> Multiline (m)</label>
+    <label><input type="checkbox" id="fs"> Dotall (s)</label>
+  </div>
+  <div class="chk" style="margin-top:10px">
+    <span style="color:var(--muted)">Presets:</span>
+    <span id="presets"></span>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Test Text</h3>
+  <textarea id="text">foo-foo bar BAR abc-abc hello hello
+call the cat. 2026-09-04 #ff8800 192.168.1.1</textarea>
+  <div class="row">
+    <button class="primary" onclick="doTest()">Test</button>
+    <button class="secondary" onclick="doExplain()">Explain</button>
+    <span class="count" id="count"></span>
+  </div>
+  <div id="error" style="display:none"></div>
+</div>
+
+<div class="card" id="cardMatches">
+  <h3>Matches</h3>
+  <div id="testText" style="font-family:ui-monospace,Menlo,monospace;font-size:13px;white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px;margin-bottom:10px"></div>
+  <div id="matches"></div>
+</div>
+
+<div class="card" id="cardExplain">
+  <h3>How it works</h3>
+  <div id="summary" class="summary"></div>
+  <div id="steps"></div>
+</div>
+
+<script src="regex-engine.js"></script>
+<script>
+const $pattern = document.getElementById('pattern');
+const $text = document.getElementById('text');
+const $count = document.getElementById('count');
+const $matches = document.getElementById('matches');
+const $testText = document.getElementById('testText');
+const $steps = document.getElementById('steps');
+const $summary = document.getElementById('summary');
+const $err = document.getElementById('error');
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function flagsFromUI() {
+  let f = '';
+  if (document.getElementById('fg').checked) f += 'g';
+  if (document.getElementById('fi').checked) f += 'i';
+  if (document.getElementById('fm').checked) f += 'm';
+  if (document.getElementById('fs').checked) f += 's';
+  return f;
+}
+function showErr(m) { $err.innerHTML = '<span class="err-msg">' + esc(m) + '</span>'; $err.style.display = 'block'; }
+function hideErr() { $err.style.display = 'none'; }
+
+function doTest() {
+  hideErr();
+  const flags = flagsFromUI();
+  const t = RegexEngine.test($pattern.value, $text.value, flags);
+  if (t.error) { showErr(t.error); $count.textContent = ''; $matches.innerHTML = ''; $testText.textContent = ''; return; }
+  $count.textContent = t.ok ? (t.count + ' match' + (t.count === 1 ? '' : 'es')) : 'No match';
+  $count.className = 'count ' + (t.ok ? 'ok-color' : 'err-color');
+  // highlight matches in source text
+  const raw = $text.value;
+  const highlighted = $text.value;
+  let html = esc(highlighted);
+  if (t.count > 0 && flags.includes('g')) {
+    let result = '';
+    let lastIdx = 0;
+    for (const m of t.matches) {
+      if (m.match === '') break;
+      result += esc(highlighted.slice(lastIdx, m.index)) + '<mark>' + esc(m.match) + '</mark>';
+      lastIdx = m.index + m.match.length;
+    }
+    result += esc(highlighted.slice(lastIdx));
+    html = result;
+  } else if (t.count > 0) {
+    const m = t.matches[0];
+    html = esc(highlighted.slice(0, m.index)) + '<mark>' + esc(m.match) + '</mark>' + esc(highlighted.slice(m.index + m.match.length));
+  }
+  $testText.innerHTML = html;
+  // list matches with groups
+  $matches.innerHTML = t.matches.length === 0 ? '<div style="color:var(--muted)">No matches found.</div>' :
+    t.matches.map((m, i) => {
+      let g = '';
+      if (m.groups.length > 0 && m.groups.some(v => v !== null)) {
+        g = '<div style="margin-left:18px;color:var(--muted)">' + m.groups.map((v, gi) => 'group ' + (gi + 1) + ': <code>' + esc(v === null ? '(unset)' : v) + '</code>').join(' · ') + '</div>';
+      }
+      return '<div class="mtch"><span class="idx">#' + (i + 1) + ' @' + m.index + '</span> <code>' + esc(m.match) + '</code>' + g + '</div>';
+    }).join('');
+}
+
+function doExplain() {
+  hideErr();
+  const e = RegexEngine.explain($pattern.value);
+  if (e.error) { showErr(e.error); $summary.textContent = ''; $steps.innerHTML = ''; return; }
+  $summary.textContent = e.summary;
+  $steps.innerHTML = e.steps.length ?
+    e.steps.map(s => '<div class="step"><span class="tok">' + esc(s.token) + '</span><span class="des">' + esc(s.desc) + '</span></div>').join('') :
+    '<div style="color:var(--muted)">No tokens parsed.</div>';
+}
+
+function loadPreset(key) {
+  const p = RegexEngine.PRESETS[key];
+  $pattern.value = p.pattern;
+  doTest(); doExplain();
+}
+
+// render presets
+$presets = document.getElementById('presets');
+$presets.innerHTML = Object.keys(RegexEngine.PRESETS).map(k =>
+  '<span class="preset" onclick="loadPreset(\'' + k + '\')">' + esc(RegexEngine.PRESETS[k].name) + '</span>'
+).join('');
+
+$pattern.addEventListener('input', () => { hideErr(); });
+document.querySelectorAll('#fi,#fm,#fs,#fg').forEach(cb => cb.addEventListener('change', doTest));
+
+doTest(); doExplain();
+</script>
+</body>
+</html>
