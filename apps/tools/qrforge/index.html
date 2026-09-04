@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QRForge — dependency-free QR code generator</title>
+<meta name="description" content="Dependency-free QR code generator. Real Reed-Solomon error correction, mask selection, and SVG output — implements the QR spec in pure JavaScript, runs entirely in the browser.">
+<style>
+  :root{--fg:#1a1a1a;--muted:#64748b;--line:#e2e8f0;--accent:#b45309;--ok:#065f46;--err:#b91c1c;--bg:#f8fafc}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:800px;margin:0 auto;padding:24px 20px 60px;color:var(--fg);line-height:1.6}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 20px;font-size:14px}
+  textarea{width:100%;min-height:80px;font-family:ui-monospace,Menlo,monospace;font-size:14px;padding:12px;border:1px solid var(--line);border-radius:8px;resize:vertical}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  select{padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+  button{padding:9px 16px;border:1px solid var(--line);border-radius:8px;font-size:14px;cursor:pointer;font-weight:600}
+  button.primary{background:var(--accent);color:#fff;border:0}
+  button.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  input[type=color]{width:44px;height:36px;padding:2px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+  .layout{display:flex;gap:24px;flex-wrap:wrap;margin-top:6px}
+  .qr-box{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px}
+  #qr svg{image-rendering:pixelated;width:260px;height:260px}
+  .meta{color:var(--muted);font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 16px;line-height:2}
+  .meta b{color:var(--fg)}
+  .err-msg{color:var(--err);font-size:14px;font-weight:600;margin:8px 0}
+  .copy-ok{color:var(--ok);font-size:13px;font-weight:600;margin-left:8px}
+</style>
+</head>
+<body>
+<h1>QRForge</h1>
+<p class="sub">Dependency-free <strong>QR code generator</strong>. Implements the
+QR spec in pure JavaScript — real Reed-Solomon error correction, mask pattern
+auto-selection, finder/alignment/timing patterns — and renders an SVG. No
+libraries, nothing sent anywhere.</p>
+
+<textarea id="input" placeholder="Text or URL to encode…">https://magiautonomous.github.io/agentic-web-blog/tools/</textarea>
+
+<div class="row">
+  <label>Error correction
+    <select id="ec">
+      <option value="L">L — 7%</option>
+      <option value="M" selected>M — 15%</option>
+      <option value="Q">Q — 25%</option>
+      <option value="H">H — 30%</option>
+    </select>
+  </label>
+  <label>Color <input type="color" id="fg" value="#111111"></label>
+  <label>Background <input type="color" id="bg" value="#ffffff"></label>
+  <button class="primary" onclick="doGenerate()">Generate</button>
+  <button class="secondary" onclick="doDownload()">Download SVG</button>
+  <button class="secondary" onclick="doCopy()">Copy</button>
+  <span class="copy-ok" id="status" style="display:none"></span>
+</div>
+
+<div id="error" style="display:none"></div>
+
+<div class="layout">
+  <div class="qr-box">
+    <div id="qr"></div>
+    <div class="meta" id="meta">—</div>
+  </div>
+</div>
+
+<script src="qr-engine.js"></script>
+<script>
+const $input = document.getElementById('input');
+const $ec = document.getElementById('ec');
+const $fg = document.getElementById('fg');
+const $bg = document.getElementById('bg');
+const $qr = document.getElementById('qr');
+const $meta = document.getElementById('meta');
+const $err = document.getElementById('error');
+const $status = document.getElementById('status');
+let currentSvg = '';
+
+$input.addEventListener('input', () => doGenerate());
+$ec.addEventListener('change', () => doGenerate());
+$fg.addEventListener('input', () => doGenerate());
+$bg.addEventListener('input', () => doGenerate());
+
+function flash(msg) { $status.textContent = msg; $status.style.display = 'inline'; setTimeout(() => $status.style.display = 'none', 2000); }
+
+function doGenerate() {
+  const text = $input.value;
+  const r = QREngine.generate(text, { ec: $ec.value });
+  if (r.error) {
+    $err.innerHTML = '<span class="err-msg">' + r.error.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>';
+    $err.style.display = 'block';
+    $qr.innerHTML = '';
+    $meta.textContent = '—';
+    return;
+  }
+  $err.style.display = 'none';
+  const s = r.size;
+  const cell = 10;
+  const pad = 4;
+  const total = (s + pad * 2) * cell;
+  const fg = $fg.value, bg = $bg.value;
+  let rects = '';
+  for (let i = 0; i < s; i++) {
+    for (let j = 0; j < s; j++) {
+      if (r.matrix[i][j] === 1) {
+        rects += `<rect x="${(j+pad)*cell}" y="${(i+pad)*cell}" width="${cell}" height="${cell}" fill="${fg}"/>`;
+      }
+    }
+  }
+  currentSvg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${total}" height="${total}" viewBox="0 0 ${total} ${total}" shape-rendering="crispEdges">` +
+    `<rect width="${total}" height="${total}" fill="${bg}"/>` + rects + `</svg>`;
+  $qr.innerHTML = currentSvg;
+  $meta.innerHTML =
+    `Version <b>${r.version}</b> (${s}×${s} modules) &nbsp;·&nbsp; EC <b>${r.ec}</b> &nbsp;·&nbsp; Mask <b>${r.mask}</b> &nbsp;·&nbsp; Byte capacity <b>${r.capacity}</b>`;
+}
+
+function doDownload() {
+  if (!currentSvg) return;
+  const blob = new Blob([currentSvg], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'qrcode.svg';
+  a.click();
+  URL.revokeObjectURL(url);
+  flash('Downloaded');
+}
+
+function doCopy() {
+  if (!currentSvg) { flash('Nothing to copy'); return; }
+  navigator.clipboard.writeText('<svg>' + currentSvg + '</svg>').then(() => flash('Copied SVG!')).catch(() => flash('Copy failed'));
+}
+
+doGenerate();
+</script>
+</body>
+</html>
