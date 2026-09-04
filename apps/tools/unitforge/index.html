@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UnitForge — Unit Converter</title>
+<meta name="description" content="Dependency-free unit converter across 16 categories.">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:720px;margin:0 auto;padding:20px;color:#1a1a1a;line-height:1.6;background:#f8fafc}
+  h1{font-size:28px}
+  .sub{color:#64748b;font-size:14px;margin:4px 0 20px}
+  .panel{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin-bottom:16px}
+  .panel h2{font-size:17px;margin-bottom:10px;color:#1e293b}
+  label{display:block;font-size:13px;font-weight:600;margin-bottom:4px;color:#475569}
+  input,select{width:100%;height:38px;border:1px solid #d1d5db;border-radius:6px;padding:0 10px;font-size:14px;background:#fff}
+  select{cursor:pointer}
+  .row{display:flex;gap:10px;align-items:flex-end}
+  .row>div{flex:1}
+  .arrow{font-size:22px;color:#94a3b8;padding-bottom:8px}
+  .result{background:#0f172a;color:#e2e8f0;border-radius:6px;padding:14px;margin-top:12px;font-size:18px;text-align:center}
+  .result .big{font-weight:700;font-size:26px}
+  .result .sub{color:#94a3b8;font-size:13px;margin:4px 0 0}
+  .swap{background:#f1f5f9;color:#334155;border:1px solid #d1d5db;border-radius:6px;padding:8px 14px;font-size:13px;cursor:pointer;margin-top:8px}
+  .swap:hover{background:#e2e8f0}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+  .chip{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;border-radius:14px;padding:3px 10px;font-size:12px}
+  .natural{width:100%;height:38px;border:1px solid #d1d5db;border-radius:6px;padding:0 10px;font-size:14px}
+  .out{background:#0f172a;color:#e2e8f0;border-radius:6px;padding:12px;font-family:monospace;font-size:14px;white-space:pre-wrap;margin-top:10px}
+  .footer{color:#94a3b8;font-size:12px;text-align:center;margin-top:24px}
+  .err{color:#fca5a5}
+</style>
+</head>
+<body>
+<h1>UnitForge</h1>
+<div class="sub">Unit converter · 16 categories · 150+ units · runs in your browser</div>
+
+<div class="panel">
+  <h2>Convert</h2>
+  <div class="row">
+    <div><label>Value</label><input type="number" id="value" value="1"></div>
+    <div><label>From</label><select id="from"></select></div>
+    <div class="arrow">→</div>
+    <div><label>To</label><select id="to"></select></div>
+  </div>
+  <div class="result" id="result">1 m = 1 m</div>
+  <button class="swap" onclick="swapUnits()">⇄ Swap units</button>
+</div>
+
+<div class="panel">
+  <h2>Natural language</h2>
+  <input class="natural" id="natural" placeholder='e.g. "5 km to miles" or "100 lb in kg"'>
+  <div class="out" id="nlOut" style="color:#94a3b8">Type a natural-language conversion then press Enter.</div>
+</div>
+
+<div class="panel">
+  <h2>Categories</h2>
+  <div class="chips" id="chips"></div>
+</div>
+
+<hr>
+<div class="footer">Built by Casper (CASPER-X402 mission). Pure JS, no dependencies.</div>
+
+<script src="unit-engine.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const UE = UnitEngine;
+
+function populateFrom() {
+  const fromSel = $('from');
+  const toSel = $('to');
+  fromSel.innerHTML = '';
+  toSel.innerHTML = '';
+  UE.listCategories().forEach(cat => {
+    const og = document.createElement('optgroup');
+    og.label = cat.name;
+    const og2 = document.createElement('optgroup');
+    og2.label = cat.name;
+    cat.units.forEach(u => {
+      const o = document.createElement('option');
+      o.value = u.unit;
+      o.textContent = u.unit + ' — ' + u.name;
+      og.appendChild(o);
+      const o2 = o.cloneNode(true);
+      og2.appendChild(o2);
+    });
+    fromSel.appendChild(og);
+    toSel.appendChild(og2);
+  });
+}
+
+function doConvert() {
+  const value = parseFloat($('value').value);
+  const from = $('from').value;
+  const to = $('to').value;
+  if (isNaN(value)) { $('result').innerHTML = '<span class="err">Invalid value</span>'; return; }
+  const r = UE.convert(value, from, to);
+  if (!r.ok) { $('result').innerHTML = '<span class="err">' + r.error + '</span>'; return; }
+  $('result').innerHTML =
+    '<div class="big">' + r.resultText + '</div>' +
+    '<div class="sub">' + r.value + ' ' + r.from.name + ' = ' + UE.formatNumber(r.result) + ' ' + r.to.name + ' · ' + r.categoryName + '</div>';
+}
+
+function swapUnits() {
+  const f = $('from').value, t = $('to').value;
+  $('from').value = t; $('to').value = f;
+  doConvert();
+}
+
+function populateChips() {
+  const chipDiv = $('chips');
+  chipDiv.innerHTML = '';
+  UE.listCategories().forEach(cat => {
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.textContent = cat.name;
+    chip.title = cat.units.map(u => u.unit).join(', ');
+    chipDiv.appendChild(chip);
+  });
+}
+
+function handleNatural(e) {
+  if (e.key !== 'Enter') return;
+  const d = UE.detect($('natural').value);
+  if (!d) { $('nlOut').textContent = 'Could not parse that. Try "5 km to miles".'; return; }
+  const r = UE.convert(d.value, d.from, d.to);
+  if (!r.ok) { $('nlOut').innerHTML = '<span class="err">' + r.error + '</span>'; return; }
+  $('nlOut').innerHTML = '<strong>' + d.value + ' ' + d.from + '</strong> → <strong>' + r.resultText + '</strong>';
+  // also set the dropdowns
+  $('value').value = d.value;
+  $('from').value = UE.resolveUnit(d.from, d.category) || d.from;
+  $('to').value = UE.resolveUnit(d.to, d.category) || d.to;
+}
+
+populateFrom();
+populateChips();
+$('value').addEventListener('input', doConvert);
+$('from').addEventListener('change', doConvert);
+$('to').addEventListener('change', doConvert);
+$('natural').addEventListener('keydown', handleNatural);
+doConvert();
+</script>
+</body>
+</html>
