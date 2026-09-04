@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JSONForge — JSON formatter, validator & inspector</title>
+<meta name="description" content="Dependency-free JSON formatter, minifier, validator with error location, collapsible tree view, path query, and stats. Runs entirely in the browser.">
+<style>
+  :root{--fg:#1a1a1a;--muted:#64748b;--line:#e2e8f0;--accent:#7c3aed;--ok:#065f46;--warn:#92400e;--err:#b91c1c;--bg:#f8fafc}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:860px;margin:0 auto;padding:24px 20px 60px;color:var(--fg);line-height:1.6}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 20px;font-size:14px}
+  textarea{width:100%;min-height:160px;font-family:ui-monospace,Menlo,monospace;font-size:13px;padding:12px;border:1px solid var(--line);border-radius:8px;resize:vertical;background:#fff;tab-size:2}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  button{padding:9px 16px;border:1px solid var(--line);border-radius:8px;font-size:14px;cursor:pointer;font-weight:600}
+  button.primary{background:var(--accent);color:#fff;border:0}
+  button.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  button.danger{background:#fff;color:var(--err);border:1px solid var(--err)}
+  select{padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+  .tabs{display:flex;gap:0;margin:18px 0 0;border-bottom:2px solid var(--line)}
+  .tabs button{border:0;background:none;padding:10px 18px;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer}
+  .tabs button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+  .panel{display:none;padding:14px 0 0}
+  .panel.active{display:block}
+  .card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--bg);margin:0}
+  .card h3{margin:0 0 8px;font-size:15px;border-bottom:1px solid var(--line);padding-bottom:5px}
+  pre.out{font-family:ui-monospace,Menlo,monospace;font-size:13px;white-space:pre-wrap;word-break:break-word;margin:0;background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px;max-height:400px;overflow:auto}
+  .stat{display:inline-flex;gap:6px;margin:4px 12px 4px 0;font-size:13px}
+  .stat b{color:var(--accent)}
+  .err-msg{color:var(--err);font-size:14px;font-weight:600;margin:8px 0}
+  .err-loc{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--warn)}
+  .tree-node{margin-left:16px}
+  .tree-key{color:var(--accent);cursor:pointer;user-select:none}
+  .tree-key:hover{text-decoration:underline}
+  .tree-val-str{color:var(--ok)}
+  .tree-val-num{color:#0369a1}
+  .tree-val-bool{color:var(--accent)}
+  .tree-val-null{color:var(--muted);font-style:italic}
+  .tree-toggle{display:inline-block;width:14px;color:var(--muted);cursor:pointer;text-align:center;font-family:monospace}
+  .tree-summary{color:var(--muted);font-size:13px}
+  .path-input{display:flex;gap:8px;align-items:center;margin:10px 0}
+  .path-input input{flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+  .path-result{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px;max-height:300px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+  .copy-ok{color:var(--ok);font-size:13px;font-weight:600;margin-left:8px}
+</style>
+</head>
+<body>
+<h1>JSONForge</h1>
+<p class="sub">Dependency-free <strong>JSON formatter, minifier, validator &amp; inspector</strong>. Paste any JSON to format, minify, validate with precise error location, explore a collapsible tree, query paths, and view stats. Runs entirely in the browser.</p>
+
+<textarea id="src" placeholder='Paste JSON here… e.g. {"name":"jsonforge","tags":["json","tool"],"meta":{"v":1}}'></textarea>
+
+<div class="row">
+  <button class="primary" onclick="doFormat()">Format</button>
+  <button onclick="doMinify()">Minify</button>
+  <button class="secondary" onclick="doValidate()">Validate</button>
+  <select id="indent">
+    <option value="2" selected>2 spaces</option>
+    <option value="4">4 spaces</option>
+    <option value="8">8 spaces</option>
+    <option value="tab">Tab</option>
+  </select>
+  <button onclick="doStats()">Stats</button>
+  <button onclick="doCopy()" class="secondary">Copy Output</button>
+</div>
+
+<div id="error" style="display:none"></div>
+<div id="status" class="copy-ok" style="display:none"></div>
+
+<div class="tabs" id="tabBar">
+  <button class="active" onclick="showTab('output')">Output</button>
+  <button onclick="showTab('tree')">Tree View</button>
+  <button onclick="showTab('path')">Path Query</button>
+  <button onclick="showTab('stats')">Stats</button>
+</div>
+
+<div class="panel active" id="panel-output">
+  <div class="card"><h3>Formatted / Minified Output</h3><pre class="out" id="out">—</pre></div>
+</div>
+
+<div class="panel" id="panel-tree">
+  <div class="card"><h3>Tree View <span style="font-weight:normal;font-size:13px;color:var(--muted)">— click keys to expand/collapse</span></h3><div id="treeOut"></div></div>
+</div>
+
+<div class="panel" id="panel-path">
+  <div class="card"><h3>Path Query</h3>
+    <div class="path-input"><input id="pathInput" placeholder="e.g. data.users[0].name" onkeydown="if(event.key==='Enter')doQuery()"><button class="primary" onclick="doQuery()">Query</button></div>
+    <p style="color:var(--muted);font-size:13px;margin:4px 0 10px">Dot notation: <code>a.b.c</code> &middot; Array index: <code>arr[0]</code> &middot; All elements: <code>arr[*]</code> &middot; Dollar prefix optional: <code>$.a.b</code></p>
+    <pre class="path-result" id="queryOut">—</pre>
+  </div>
+</div>
+
+<div class="panel" id="panel-stats">
+  <div class="card"><h3>JSON Stats</h3><div id="statsOut" style="padding:8px 0">—</div></div>
+</div>
+
+<script src="json-engine.js"></script>
+<script>
+const $src = document.getElementById('src');
+const $out = document.getElementById('out');
+const $err = document.getElementById('error');
+const $treeOut = document.getElementById('treeOut');
+const $queryOut = document.getElementById('queryOut');
+const $statsOut = document.getElementById('statsOut');
+const $indent = document.getElementById('indent');
+const $pathInput = document.getElementById('pathInput');
+const $status = document.getElementById('status');
+let lastOutput = '';
+
+function showTab(name) {
+  document.querySelectorAll('.tabs button').forEach((b, i) => {
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(name.slice(0, 4)));
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+function hideErr() { $err.style.display = 'none'; $err.innerHTML = ''; }
+function showErr(msg, line, col) {
+  let h = '<span class="err-msg">' + esc(msg) + '</span>';
+  if (line) h += '<br><span class="err-loc">Line ' + line + ', Col ' + col + '</span>';
+  $err.innerHTML = h; $err.style.display = 'block';
+}
+function flash(msg) { $status.textContent = msg; $status.style.display = 'inline'; setTimeout(() => $status.style.display = 'none', 2000); }
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+function doFormat() {
+  hideErr(); showTab('output');
+  const r = JsonEngine.format($src.value, $indent.value);
+  if (r.error) { showErr(r.error, r.line, r.col); $out.textContent = '—'; lastOutput = ''; return; }
+  $out.textContent = r.formatted; lastOutput = r.formatted;
+}
+
+function doMinify() {
+  hideErr(); showTab('output');
+  const r = JsonEngine.minify($src.value);
+  if (r.error) { showErr(r.error, r.line, r.col); $out.textContent = '—'; lastOutput = ''; return; }
+  $out.textContent = r.minified; lastOutput = r.minified;
+}
+
+function doValidate() {
+  hideErr(); showTab('output');
+  const r = JsonEngine.validate($src.value);
+  if (r.error) { showErr(r.error, r.line, r.col); $out.textContent = '—'; lastOutput = ''; }
+  else { $out.textContent = '✓ Valid JSON'; lastOutput = ''; }
+}
+
+function doStats() {
+  hideErr(); showTab('stats');
+  const r = JsonEngine.stats($src.value);
+  if (r.error) { showErr(r.error, r.line, r.col); $statsOut.innerHTML = '—'; return; }
+  const items = [
+    ['Size', r.size + ' chars'],
+    ['UTF-8', r.sizeBytes + ' bytes'],
+    ['Depth', r.depth],
+    ['Keys', r.keys],
+    ['Objects', r.objects],
+    ['Arrays', r.arrays],
+    ['Strings', r.strings],
+    ['Numbers', r.numbers],
+    ['Booleans', r.booleans],
+    ['Nulls', r.nulls]
+  ];
+  $statsOut.innerHTML = items.map(([k, v]) => '<span class="stat"><b>' + k + ':</b> ' + v + '</span>').join('');
+}
+
+function doQuery() {
+  hideErr();
+  const r = JsonEngine.query($src.value, $pathInput.value);
+  if (r.error) { $queryOut.textContent = 'Error: ' + r.error; return; }
+  $queryOut.textContent = typeof r.result === 'string' ? r.result : JSON.stringify(r.result, null, 2);
+}
+
+function buildTreeUI(node, depth) {
+  const wrap = document.createElement('div');
+  wrap.className = 'tree-node';
+  if (node.type === 'object' || node.type === 'array') {
+    const tog = document.createElement('span');
+    tog.className = 'tree-toggle';
+    tog.textContent = '▼';
+    const key = document.createElement('span');
+    key.className = 'tree-key';
+    key.textContent = node.label === 'root' ? (node.type === 'array' ? '[]' : '{}') : JSON.stringify(node.label) + ': ';
+    const sum = document.createElement('span');
+    sum.className = 'tree-summary';
+    sum.textContent = node.type === 'array' ? '[' + node.count + ']' : '{' + node.count + '}';
+    const childWrap = document.createElement('div');
+    let collapsed = false;
+    function render() {
+      childWrap.innerHTML = '';
+      if (collapsed) {
+        tog.textContent = '▶';
+        sum.style.display = '';
+      } else {
+        tog.textContent = '▼';
+        sum.style.display = 'none';
+        node.children.forEach(c => childWrap.appendChild(buildTreeUI(c, depth + 1)));
+      }
+    }
+    tog.onclick = () => { collapsed = !collapsed; render(); };
+    key.onclick = () => { collapsed = !collapsed; render(); };
+    wrap.appendChild(tog);
+    wrap.appendChild(key);
+    wrap.appendChild(sum);
+    render();
+    wrap.appendChild(childWrap);
+  } else {
+    const val = document.createElement('span');
+    const cls = { string: 'tree-val-str', number: 'tree-val-num', boolean: 'tree-val-bool', null: 'tree-val-null' }[node.type];
+    val.className = cls || '';
+    const prefix = node.label !== undefined ? JSON.stringify(node.label) + ': ' : '';
+    val.textContent = prefix + (node.type === 'string' ? JSON.stringify(node.value) : String(node.value));
+    wrap.appendChild(val);
+  }
+  return wrap;
+}
+
+function doTree() {
+  hideErr(); showTab('tree');
+  const r = JsonEngine.buildTree($src.value);
+  if (r.error) { showErr(r.error, r.line, r.col); $treeOut.innerHTML = ''; return; }
+  $treeOut.innerHTML = '';
+  $treeOut.appendChild(buildTreeUI(r.tree, 0));
+}
+
+function doCopy() {
+  if (!lastOutput) { flash('Nothing to copy'); return; }
+  navigator.clipboard.writeText(lastOutput).then(() => flash('Copied!')).catch(() => flash('Copy failed'));
+}
+
+// hook tree tab activation
+document.querySelector('.tabs button:nth-child(2)').addEventListener('click', doTree);
+</script>
+</body>
+</html>
