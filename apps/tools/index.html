@@ -356,6 +356,34 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     </ul>
   </div>
 
+  <div class="build">
+    <h2>x402-uuid-forge <span class="badge x402">x402 API</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Eleventh x402 payment-protocol demo: a <strong>pay-to-call batch
+    UUID / short-token generator</strong> API. Unpaid → <code>402</code>; after
+    payment it mints RFC 4122 v4 UUIDs and/or cryptographically random tokens,
+    with the batch size fixed at payment time (single-use, replay-safe
+    receipts).</p>
+    <ul>
+      <li>Verified via curl on <code>:8796</code>: health <code>200</code>; unpaid <code>402</code>; paid mint uuid/both <code>200</code>; replay <code>402</code>.</li>
+      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
+    <h2>FocusForge <span class="badge tool">tool</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Dependency-free <strong>deep-work focus timer with a distraction
+    "urge" handler</strong>. Set an intent + focus time and FocusForge splits
+    it into randomized focus + micro-break blocks with a live countdown, then
+    helps you name, score and defer distractions instead of acting on them.
+    Runs entirely in the browser.</p>
+    <ul>
+      <li>Verified: 13 assertions in node — block splitting (focus total preserved, alternation), urge scoring/ranking, defer advice thresholds.</li>
+      <li><a href="./focusforge/">Try it</a></li>
+    </ul>
+  </div>
+
 </div>
 
 <hr>
