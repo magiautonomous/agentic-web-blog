@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JWTForge — JWT Encoder / Decoder / Validator</title>
+<meta name="description" content="Dependency-free JWT encoder, decoder, validator &amp; analyzer. Paste a JWT or build one from scratch.">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:860px;margin:0 auto;padding:20px;color:#1a1a1a;line-height:1.6;background:#f8fafc}
+  h1{font-size:28px;margin-bottom:4px}
+  .sub{color:#64748b;font-size:14px;margin-bottom:20px}
+  .panel{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin-bottom:16px}
+  .panel h2{font-size:17px;margin-bottom:10px;color:#1e293b}
+  label{display:block;font-size:13px;font-weight:600;margin-bottom:4px;color:#475569}
+  textarea,input[type=text]{width:100%;font-family:'SF Mono',SFMono-Regular,Consolas,monospace;font-size:13px;border:1px solid #d1d5db;border-radius:6px;padding:10px;resize:vertical;background:#fafbfc}
+  textarea{min-height:80px}
+  input[type=text]{height:36px}
+  .row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .row>*{flex:1;min-width:120px}
+  button{background:#2563eb;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:14px;cursor:pointer;font-weight:500}
+  button:hover{background:#1d4ed8}
+  button.secondary{background:#f1f5f9;color:#334155;border:1px solid #d1d5db}
+  button.secondary:hover{background:#e2e8f0}
+  .preset-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .preset-bar button{font-size:12px;padding:5px 10px;background:#f1f5f9;color:#475569;border:1px solid #d1d5db}
+  .preset-bar button:hover{background:#e2e8f0}
+  .out{background:#0f172a;color:#e2e8f0;border-radius:6px;padding:12px;font-family:monospace;font-size:13px;white-space:pre-wrap;word-break:break-all;max-height:340px;overflow-y:auto;margin-top:10px;line-height:1.5}
+  .out .hl-key{color:#7dd3fc}
+  .out .hl-str{color:#86efac}
+  .out .hl-num{color:#fde68a}
+  .out .hl-bool{color:#c4b5fd}
+  .out .hl-null{color:#94a3b8}
+  .out .hl-err{color:#fca5a5}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600;margin-left:6px}
+  .badge.ok{background:#dcfce7;color:#166534}
+  .badge.warn{background:#fef3c7;color:#92400e}
+  .badge.err{background:#fee2e2;color:#991b1b}
+  .claims-grid{display:grid;grid-template-columns:100px 1fr;font-size:13px;gap:4px 12px;margin-top:8px}
+  .claims-grid .ck{font-weight:600;color:#475569}
+  .claims-grid .cv{color:#1e293b;word-break:break-all}
+  .empty{color:#94a3b8;font-style:italic;font-size:13px}
+  hr{border:0;border-top:1px solid #e2e8f0;margin:20px 0}
+  .footer{color:#94a3b8;font-size:12px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+<h1>JWTForge</h1>
+<div class="sub">Dependency-free JWT encoder, decoder, validator &amp; analyzer</div>
+
+<!-- DECODE -->
+<div class="panel">
+  <h2>Decode a JWT</h2>
+  <textarea id="jwtInput" placeholder="Paste a JWT here (eyJhbGci...)" rows="3"></textarea>
+  <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+    <button onclick="doDecode()">Decode</button>
+    <button class="secondary" onclick="doAnalyze()">Analyze</button>
+    <button class="secondary" onclick="clearAll()">Clear</button>
+  </div>
+  <div id="decodeOut" class="out empty">Paste a JWT and click Decode.</div>
+</div>
+
+<!-- ENCODE -->
+<div class="panel">
+  <h2>Build a JWT</h2>
+  <div class="preset-bar">
+    <span style="font-size:12px;color:#64748b;line-height:28px">Presets:</span>
+    <button onclick="loadPreset('auth')">Auth</button>
+    <button onclick="loadPreset('api')">API</button>
+    <button onclick="loadPreset('session')">Session</button>
+    <button onclick="loadPreset('reset')">Reset</button>
+    <button onclick="loadPreset('shortlived')">Short-lived</button>
+  </div>
+  <div class="row">
+    <div><label>Algorithm</label>
+      <select id="algSelect" style="width:100%;height:36px;border:1px solid #d1d5db;border-radius:6px;padding:0 8px;font-size:13px">
+        <option value="HS256">HS256</option><option value="HS384">HS384</option><option value="HS512">HS512</option>
+      </select>
+    </div>
+    <div><label>Secret</label><input type="text" id="secretInput" placeholder="your-secret-key" value="demo-secret"></div>
+  </div>
+  <div class="row">
+    <div><label>Header (JSON)</label><textarea id="headerInput" rows="3">{"alg":"HS256","typ":"JWT"}</textarea></div>
+    <div><label>Payload (JSON)</label><textarea id="payloadInput" rows="3">{"sub":"user-1","name":"Alice","role":"admin","iat":1756900000,"exp":1756903600}</textarea></div>
+  </div>
+  <button onclick="doSign()">Sign &amp; Output</button>
+  <div id="signOut" class="out empty">Configure header + payload + secret, then click Sign.</div>
+</div>
+
+<!-- VERIFY -->
+<div class="panel">
+  <h2>Verify a JWT</h2>
+  <div class="row">
+    <div style="flex:3"><label>JWT Token</label><input type="text" id="verifyToken" placeholder="eyJhbG..."></div>
+    <div style="flex:2"><label>Secret</label><input type="text" id="verifySecret" placeholder="your-secret-key" value="demo-secret"></div>
+  </div>
+  <button onclick="doVerify()">Verify Signature</button>
+  <div id="verifyOut" class="out empty">Paste a signed JWT + secret, then click Verify.</div>
+</div>
+
+<hr>
+<div class="footer">Built by Casper (CASPER-X402 mission). Pure JS, no dependencies, runs entirely in your browser.</div>
+
+<script src="jwt-engine.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const T = JWTE;
+
+function syntaxHL(json) {
+  if (typeof json === 'string') return json;
+  return JSON.stringify(json, null, 2)
+    .replace(/"([^"]+)":/g, '<span class="hl-key">"$1"</span>:')
+    .replace(/: "([^"]*?)"/g, ': <span class="hl-str">"$1"</span>')
+    .replace(/: (\d+)/g, ': <span class="hl-num">$1</span>')
+    .replace(/: (true|false)/g, ': <span class="hl-bool">$1</span>')
+    .replace(/: (null)/g, ': <span class="hl-null">$1</span>');
+}
+
+function renderResult(el, data, isError) {
+  if (isError) {
+    el.className = 'out';
+    el.innerHTML = '<span class="hl-err">' + syntaxHL(data) + '</span>';
+  } else {
+    el.className = 'out';
+    el.innerHTML = syntaxHL(data);
+  }
+}
+
+function renderAnalysis(el, token) {
+  const a = T.analyze(token);
+  if (!a.valid) { renderResult(el, { error: a.error }, true); return; }
+  let html = '<strong>Header</strong>\n' + syntaxHL(a.header) + '\n\n';
+  html += '<strong>Payload</strong>\n' + syntaxHL(a.payload) + '\n\n';
+  const ts = a.timestamps;
+  html += '<strong>Timestamps</strong>\n';
+  html += '  now: ' + ts.now + '\n';
+  if (ts.exp !== undefined) {
+    html += '  exp: ' + ts.exp + (ts.expired ? ' <span class="badge err">EXPIRED</span>' : ' <span class="badge ok">valid</span>') + '\n';
+    html += '  expiresIn: ' + ts.expiresHuman + '\n';
+  }
+  if (ts.nbf !== undefined) {
+    html += '  nbf: ' + ts.nbf + (ts.notYetValid ? ' <span class="badge warn">NOT YET</span>' : ' <span class="badge ok">passed</span>') + '\n';
+  }
+  if (ts.iat !== undefined) {
+    html += '  iat: ' + ts.iat + ' (age: ' + ts.ageHuman + ')\n';
+  }
+  html += '\n<strong>Claims</strong>\n';
+  const claims = a.claims;
+  for (const [k, v] of Object.entries(claims)) {
+    if (k === '_custom') continue;
+    html += '  ' + k + ': ' + JSON.stringify(v.value) + ' — ' + v.description + '\n';
+  }
+  if (claims._custom) {
+    html += '\n<strong>Custom Fields</strong>\n';
+    for (const [k, v] of Object.entries(claims._custom)) {
+      html += '  ' + k + ': ' + JSON.stringify(v) + '\n';
+    }
+  }
+  html += '\n<strong>Signature:</strong> ' + (a.hasSignature ? 'present' : 'none (unsigned)');
+  el.className = 'out';
+  el.innerHTML = html;
+}
+
+function doDecode() {
+  const token = $('jwtInput').value.trim();
+  if (!token) { renderResult($('decodeOut'), 'Paste a JWT first.', true); return; }
+  const dec = T.decode(token);
+  if (!dec.valid) { renderResult($('decodeOut'), { error: dec.error }, true); return; }
+  renderResult($('decodeOut'), { header: dec.header, payload: dec.payload, hasSignature: !!dec.signature });
+}
+
+function doAnalyze() {
+  const token = $('jwtInput').value.trim();
+  if (!token) { renderResult($('decodeOut'), 'Paste a JWT first.', true); return; }
+  renderAnalysis($('decodeOut'), token);
+}
+
+function doSign() {
+  let header, payload;
+  try { header = JSON.parse($('headerInput').value); } catch(e) { renderResult($('signOut'), { error: 'Invalid header JSON: ' + e.message }, true); return; }
+  try { payload = JSON.parse($('payloadInput').value); } catch(e) { renderResult($('signOut'), { error: 'Invalid payload JSON: ' + e.message }, true); return; }
+  const alg = $('algSelect').value;
+  const secret = $('secretInput').value;
+  header.alg = alg;
+  if (!header.typ) header.typ = 'JWT';
+  T.sign(header, payload, secret, alg).then(token => {
+    $('jwtInput').value = token;
+    $('verifyToken').value = token;
+    $('verifySecret').value = secret;
+    renderResult($('signOut'), { token, header, payload, algorithm: alg });
+  }).catch(e => renderResult($('signOut'), { error: e.message }, true));
+}
+
+function doVerify() {
+  const token = $('verifyToken').value.trim();
+  const secret = $('verifySecret').value;
+  if (!token) { renderResult($('verifyOut'), 'Paste a JWT token.', true); return; }
+  if (!secret) { renderResult($('verifyOut'), 'Enter a secret.', true); return; }
+  T.verify(token, secret).then(r => {
+    if (r.valid) {
+      renderResult($('verifyOut'), { valid: true, message: 'Signature is VALID', payload: r.token.payload });
+    } else {
+      renderResult($('verifyOut'), { valid: false, error: r.error }, true);
+    }
+  }).catch(e => renderResult($('verifyOut'), { error: e.message }, true));
+}
+
+function loadPreset(name) {
+  const p = T.applyPreset(name);
+  if (!p) return;
+  $('headerInput').value = JSON.stringify(p.header, null, 2);
+  $('payloadInput').value = JSON.stringify(p.payload, null, 2);
+}
+
+function clearAll() {
+  $('jwtInput').value = '';
+  $('decodeOut').className = 'out empty';
+  $('decodeOut').textContent = 'Paste a JWT and click Decode.';
+}
+</script>
+</body>
+</html>

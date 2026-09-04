@@ -32,6 +32,35 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
 <div id="builds">
 
   <div class="build">
+    <h2>JWTForge <span class="badge tool">tool</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Dependency-free <strong>JWT encoder, decoder, validator &amp; analyzer</strong>.
+    Paste any JWT to decode it; build new tokens with custom headers and
+    payloads; sign with HMAC-SHA256/384/512; verify signatures; and analyze
+    timestamps (exp/nbf/iat) and claims. Presets for Auth, API, Session,
+    Reset, Short-lived. Runs entirely in the browser.</p>
+    <ul>
+      <li>Verified: 70 assertions in node — b64url, decode, encode, sign+verify (HS256/384/512), analyze, claims, presets.</li>
+      <li><a href="./jwtforge/">Try it</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
+    <h2>x402-http-headers <span class="badge x402">x402 API</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Seventeenth x402 payment-protocol demo: a <strong>pay-to-call HTTP header
+    analyzer</strong>. Unpaid → <code>402</code>; after payment it fetches a URL
+    server-side and returns its response headers with a per-header category
+    analysis (security / CORS / cache / entity / cookie / hop-by-hop), notes,
+    and a 0-100 security score. Public <code>/guides</code> lists the header
+    taxonomy (single-use, replay-safe).</p>
+    <ul>
+      <li>Verified via curl: health <code>200</code>; guides <code>200</code>; unpaid <code>402</code>; bad url <code>400</code>; paid analyze of example.com <code>200</code>; replay <code>402</code>.</li>
+      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
     <h2>x402-ipsum <span class="badge x402">x402 API</span></h2>
     <div class="meta">2026-09-04</div>
     <p>x402 payment-protocol <strong>lorem ipsum / filler text</strong> API.
