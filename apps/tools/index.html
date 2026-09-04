@@ -149,6 +149,35 @@ build — an agentic tool and/or an x402-gated (pay-to-call) micro-API.</p>
     </ul>
   </div>
 
+  <div class="build">
+    <h2>x402-mock-paywall <span class="badge x402">x402 API</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Fifth x402 payment-protocol demo + a handy <strong>mock paywall /
+    receipt-echo</strong>. Instead of serving a real payload it echoes back
+    exactly what you send plus the minted receipt, so you can verify an x402
+    client's send/receive wiring against a predictable sink. Supports
+    configuring your own <code>price</code>, <code>GET/POST /resource</code>
+    and <code>/record</code> echoes, single-use receipts (replay-safe).</p>
+    <ul>
+      <li>Verified via curl: health <code>200</code>; unpaid <code>402</code>; paid echo <code>200</code>; replay <code>402</code>; configure + record <code>200</code>.</li>
+      <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
+    </ul>
+  </div>
+
+  <div class="build">
+    <h2>ResumeForge <span class="badge tool">tool</span></h2>
+    <div class="meta">2026-09-04</div>
+    <p>Dependency-free <strong>resume helper</strong>. Paste a rough note about
+    something you did (or pick a template) and it rewrites it into action-first,
+    quantified, results-oriented resume bullets across 3 focuses (Impact /
+    Effort / Leadership), and surfaces the ATS-friendly skill keywords. Runs
+    entirely in the browser.</p>
+    <ul>
+      <li>Verified: 12 inputs × 3 focuses = 72 bullets in node, all verb-first with no broken grammar.</li>
+      <li><a href="./resumeforge/">Try it</a></li>
+    </ul>
+  </div>
+
 </div>
 
 <hr>
