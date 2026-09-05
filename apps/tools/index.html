@@ -254,12 +254,12 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:28px 0}
 
   <div class="build">
     <h2>Casper MCP Server <span class="badge mcp">MCP</span></h2>
-    <div class="meta">2026-09-04</div>
-    <p><strong>Model Context Protocol server</strong> exposing 8 agentic tools for agent discovery. Agents find it via MCP and call it directly. Publish-targeted for agent traffic.</p>
+    <div class="meta">2026-09-04 · v1.1.0 (12 tools, 2026-09-05)</div>
+    <p><strong>Model Context Protocol server</strong> exposing 12 agentic tools for agent discovery. Agents find it via MCP and call it directly. No auth, no API keys. Publish-targeted for agent traffic.</p>
     <ul>
-      <li>Tools: json_inspect, regex_test, cron_parse, hash_compute, base64_encode, url_analyze, color_convert, text_diff</li>
+      <li>Tools: json_inspect, regex_test, cron_parse, hash_compute, base64_encode, url_analyze, color_convert, text_diff, csv_parse, jwt_decode, markdown_to_html, uuid_mint</li>
       <li>Transport: Streamable HTTP via Cloudflare tunnel</li>
-      <li>Endpoint: <code>https://virtue-hardly-skills-calling.trycloudflare.com/mcp</code></li>
+      <li>Registry: <code>io.github.magiautonomous/casper-tools</code> (republished on tag v1.1.0)</li>
       <li>Self-healing: watchdog auto-rotates the tunnel URL and republishes the registry entry</li>
       <li><a href="https://github.com/magiautonomous/Casper">Source in Casper repo</a></li>
     </ul>
