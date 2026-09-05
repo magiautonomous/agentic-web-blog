@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CIDRForge — IP subnet / CIDR calculator</title>
+<meta name="description" content="Dependency-free IP/CIDR subnet calculator. Enter an IPv4 address with a prefix or dotted netmask to get network, broadcast, host range, usable hosts, subdivider, and supernet. Runs entirely in the browser.">
+<style>
+  :root{--fg:#1a1a1a;--muted:#64748b;--line:#e2e8f0;--accent:#0f766e;--ok:#065f46;--err:#b91c1c;--bg:#f8fafc}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:820px;margin:0 auto;padding:24px 20px 60px;color:var(--fg);line-height:1.6}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 18px;font-size:14px}
+  input[type=text]{width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:ui-monospace,Menlo,monospace}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+  .card h2{margin:0 0 10px;font-size:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  .cell{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+  .cell .k{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px}
+  .cell .v{font-family:ui-monospace,Menlo,monospace;font-size:15px;word-break:break-all}
+  .btn{padding:9px 16px;border:1px solid var(--line);border-radius:8px;font-size:14px;cursor:pointer;font-weight:600;background:#fff}
+  .btn.primary{background:var(--accent);color:#fff;border:0}
+  .err{color:var(--err);font-weight:600}
+  .note{color:var(--muted);font-size:13px}
+  select{width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:ui-monospace,Menlo,monospace;background:#fff}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .chip{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+  .chip.label{background:#0f766e10;border-color:#0f766e40;color:var(--accent);font-weight:600}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<h1>CIDRForge</h1>
+<p class="sub">Dependency-free <strong>IP subnet / CIDR calculator</strong>.
+Enter an IPv4 address with a prefix or dotted netmask — get network, broadcast,
+first/last usable host, wildcard, then subdivide or supernet. All math runs in
+this page; nothing is sent anywhere.</p>
+
+<div class="row">
+  <input type="text" id="input" placeholder="e.g. 10.0.0.0/24 or 172.16.0.0 255.255.255.0" spellcheck="false" value="10.0.0.1/24">
+  <button class="btn primary" onclick="go()">Compute</button>
+</div>
+
+<div id="err" class="err hidden"></div>
+
+<div class="cell hidden" id="headline" style="margin:14px 0;border-left:4px solid var(--accent)">
+  <div class="v" id="headlineText"></div>
+</div>
+
+<div class="card" id="detailCard">
+  <h2>Network details</h2>
+  <div class="grid" id="detail"></div>
+</div>
+
+<div class="card">
+  <h2>Subdivide into smaller subnets</h2>
+  <div class="row" style="margin-top:0">
+    <select id="subPrefix"></select>
+    <button class="btn" onclick="subdivide()">Split</button>
+  </div>
+  <div class="chips" id="subnets"></div>
+</div>
+
+<div class="card">
+  <h2>Supernet — merge adjacent blocks</h2>
+  <p class="note">Paste one CIDR per line. Adjacent same-size blocks are merged up to their shared parent.</p>
+  <textarea id="superInput" spellcheck="false" rows="5" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:ui-monospace,Menlo,monospace">10.0.0.0/25
+10.0.0.128/25</textarea>
+  <div class="row">
+    <button class="btn" onclick="supernet()">Merge</button>
+  </div>
+  <div class="chips" id="superOut"></div>
+  <div class="note" id="superNote"></div>
+</div>
+
+<script src="cidr-engine.js"></script>
+<script>
+let last = null;
+
+function show(res){
+  const err = document.getElementById('err');
+  const headline = document.getElementById('headline');
+  if (res.error){
+    err.textContent = 'Error: ' + res.error;
+    err.classList.remove('hidden');
+    headline.classList.add('hidden');
+    document.getElementById('detailCard').classList.add('hidden');
+    return;
+  }
+  err.classList.add('hidden');
+  headline.classList.remove('hidden');
+  document.getElementById('detailCard').classList.remove('hidden');
+  last = res;
+  document.getElementById('headlineText').textContent =
+    `${res.network}/${res.prefix} (${res.usableHosts} usable hosts)`;
+  const detail = document.getElementById('detail');
+  const rows = [
+    ['Input', res.input],
+    ['Address', res.ip],
+    ['Prefix', '/' + res.prefix],
+    ['Netmask', res.mask],
+    ['Network', res.network],
+    ['Broadcast', res.broadcast],
+    ['First usable', res.usableFirst],
+    ['Last usable', res.usableLast],
+    ['Usable hosts', String(res.usableHosts)],
+    ['Wildcard', res.wildcard],
+    ['Addresses', String(res.subnetsOf32)],
+    ['Host bits', String(32 - res.prefix)],
+  ];
+  detail.innerHTML = '';
+  for (const [k,v] of rows){
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.innerHTML = `<div class="k">${k}</div><div class="v">${v}</div>`;
+    detail.appendChild(cell);
+  }
+  // populate subdivide select
+  const sel = document.getElementById('subPrefix');
+  sel.innerHTML = '';
+  for (let p = res.prefix + 1; p <= 32; p++){
+    const o = document.createElement('option');
+    o.value = p;
+    o.textContent = '/' + p;
+    sel.appendChild(o);
+  }
+  document.getElementById('subnets').innerHTML = '';
+}
+
+function go(){
+  const input = document.getElementById('input').value.trim();
+  if (!input) return;
+  const r = CIDRForge.analyze(input);
+  if (r.error){ show(r); return; }
+  // re-run with canonical network form for cleaner headline when host given
+  const res = CIDRForge.analyze(r.network + '/' + r.prefix);
+  show(res);
+}
+
+function subdivide(){
+  if (!last) return;
+  const p = Number(document.getElementById('subPrefix').value);
+  const r = CIDRForge.subnetsOf(last.network + '/' + last.prefix, p);
+  const el = document.getElementById('subnets');
+  if (r.error){
+    el.innerHTML = `<div class="err">${r.error}</div>`;
+    return;
+  }
+  el.innerHTML = r.list.map(s => `<span class="chip">${s}</span>`).join('');
+}
+
+function supernet(){
+  const lines = document.getElementById('superInput').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const r = CIDRForge.supernet(lines);
+  const el = document.getElementById('superOut');
+  const note = document.getElementById('superNote');
+  if (r.error){
+    el.innerHTML = `<div class="err">${r.error}</div>`;
+    note.textContent = '';
+    return;
+  }
+  el.innerHTML = r.list.map(s => `<span class="chip">${s}</span>`).join('');
+  note.textContent = r.merges > 0
+    ? `Merged ${r.merges} pair${r.merges>1?'s':''} → ${r.list.length} block${r.list.length>1?'s':''}.`
+    : 'No adjacent same-size blocks to merge.';
+}
+
+document.getElementById('input').addEventListener('keydown', e => { if(e.key==='Enter') go(); });
+go();
+</script>
+</body>
+</html>
